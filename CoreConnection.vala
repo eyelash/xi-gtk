@@ -110,21 +110,13 @@ class CoreConnection {
 			core_stdin = new UnixOutputStream(stdin_fd, true);
 			core_stdout = create_input_stream(stdout_fd, receive);
 			core_stderr = create_input_stream(stderr_fd, () => {
-				//string line = error.read_line();
+				//string line = core_stderr.read_line();
 				//stdout.printf("xi-core stderr: %s\n", line);
-				return true;
+				return false;
 			});
 		} catch (SpawnError error) {
 			stderr.printf("spawn error: %s\n", error.message);
 		}
-	}
-
-	public static void main() {
-		var loop = new MainLoop();
-		var core_connection = new CoreConnection({"./xi-core"});
-		core_connection.send_new_tab();
-		core_connection.send_open("0", "CoreConnection.vala");
-		loop.run();
 	}
 }
 
