@@ -19,12 +19,17 @@ class Application: Gtk.Application {
 		Object(application_id: "com.github.eyelash.xi-gtk", flags: ApplicationFlags.HANDLES_OPEN);
 	}
 
-	protected override void activate() {
+	public override void startup() {
+		base.startup();
 		var core_connection = new CoreConnection({"./xi-core"});
 		var window = new Gtk.ApplicationWindow(this);
 		window.set_default_size(400, 400);
 		window.add(new EditView(core_connection));
 		window.show_all();
+	}
+
+	public override void activate() {
+		
 	}
 
 	public override void open(File[] files, string hint) {

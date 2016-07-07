@@ -19,7 +19,18 @@ class CoreConnection {
 	private UnixOutputStream core_stdin;
 	private DataInputStream core_stdout;
 	private DataInputStream core_stderr;
-	private uint id;
+	private int id;
+	public class ResponseHandler {
+		public delegate void Delegate(Json.Node result);
+		private Delegate d;
+		public ResponseHandler(owned Delegate d) {
+			this.d = (owned)d;
+		}
+		public void invoke(Json.Node result) {
+			d(result);
+		}
+	}
+	private HashTable<int, ResponseHandler> response_handlers;
 
 	public signal void update_received(string tab, int64 first_line, int64 height, Json.Array lines, int64 scrollto_line, int64 scrollto_column);
 
@@ -39,13 +50,19 @@ class CoreConnection {
 			stdout.printf("core to front-end: %s\n", line);
 			var parser = new Json.Parser();
 			parser.load_from_data(line);
-			var root = parser.get_root();
-			if (root.get_object().has_member("id")) {
+			var root = parser.get_root().get_object();
+			if (root.has_member("id")) {
 				// response
-				//var result = root.get_object().get_member("result");
+				int id = (int)root.get_int_member("id");
+				var handler = response_handlers[id];
+				if (handler != null) {
+					var result = root.get_member("result");
+					handler.invoke(result);
+					response_handlers.remove(id);
+				}
 			} else {
-				var method = root.get_object().get_string_member("method");
-				var params = root.get_object().get_member("params");
+				var method = root.get_string_member("method");
+				var params = root.get_member("params");
 				switch (method) {
 					case "update":
 						handle_update(params.get_object());
@@ -77,7 +94,8 @@ class CoreConnection {
 		}
 	}
 
-	public void send_new_tab() {
+	public void send_new_tab(owned ResponseHandler.Delegate response_handler) {
+		response_handlers[id] = new ResponseHandler((owned)response_handler);
 		send_message("new_tab");
 	}
 
@@ -104,6 +122,7 @@ class CoreConnection {
 	}
 
 	public CoreConnection(string[] command) {
+		response_handlers = new HashTable<int, ResponseHandler>(direct_hash, direct_equal);
 		try {
 			int stdin_fd, stdout_fd, stderr_fd;
 			Process.spawn_async_with_pipes(null, command, null, SpawnFlags.SEARCH_PATH, null, out pid, out stdin_fd, out stdout_fd, out stderr_fd);
