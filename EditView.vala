@@ -17,18 +17,15 @@ namespace Xi {
 class EditView: Gtk.DrawingArea {
 	private CoreConnection core_connection;
 	private Gtk.IMContext im_context;
-	private string tab;
+	public string tab { private set; get; }
 
-	public EditView(CoreConnection core_connection) {
+	public EditView(string tab, CoreConnection core_connection) {
+		this.tab = tab;
 		this.core_connection = core_connection;
 		im_context = new Gtk.IMMulticontext();
 		im_context.commit.connect(handle_commit);
 		can_focus = true;
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK);
-		core_connection.send_new_tab((result) => {
-			this.tab = result.get_string();
-			this.core_connection.send_open(this.tab, "EditView.vala");
-		});
 	}
 
 	public override bool draw(Cairo.Context cr) {
@@ -61,6 +58,10 @@ class EditView: Gtk.DrawingArea {
 	public override void size_allocate(Gtk.Allocation allocation) {
 		base.size_allocate(allocation);
 		stdout.printf("size allocate\n");
+	}
+
+	public void update(int64 first_line, int64 height, Json.Array lines, int64 scrollto_line, int64 scrollto_column) {
+		
 	}
 }
 
