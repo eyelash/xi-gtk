@@ -113,6 +113,14 @@ class CoreConnection {
 		send_edit("open", tab, params);
 	}
 
+	public void send_render_lines(string tab, int64 first_line, int64 last_line, owned ResponseHandler.Delegate response_handler) {
+		var params = new Json.Object();
+		params.set_int_member("first_line", first_line);
+		params.set_int_member("last_line", last_line);
+		response_handlers[id] = new ResponseHandler((owned)response_handler);
+		send_edit("render_lines", tab, params);
+	}
+
 	private static DataInputStream create_input_stream(int fd, owned PollableSourceFunc func) {
 		var stream = new UnixInputStream(fd, true);
 		var source = stream.create_source();
