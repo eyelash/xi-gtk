@@ -40,14 +40,19 @@ class Application: Gtk.Application {
 		window.show_all();
 	}
 
+	private void add_new_tab(string tab) {
+		var edit_view = new EditView(tab, core_connection);
+		tabs[tab] = edit_view;
+		var scrolled_window = new Gtk.ScrolledWindow(null, null);
+		scrolled_window.add(edit_view);
+		notebook.append_page(scrolled_window, new Gtk.Label(tab));
+		notebook.show_all();
+	}
+
 	public override void activate() {
 		core_connection.send_new_tab((result) => {
-			stdout.printf("new_tab response\n");
 			var tab = result.get_string();
-			var edit_view = new EditView(tab, core_connection);
-			tabs[tab] = edit_view;
-			notebook.append_page(edit_view, new Gtk.Label(tab));
-			notebook.show_all();
+			add_new_tab(tab);
 		});
 	}
 
@@ -55,11 +60,8 @@ class Application: Gtk.Application {
 		foreach (var file in files) {
 			core_connection.send_new_tab((result) => {
 				var tab = result.get_string();
-				var edit_view = new EditView(tab, core_connection);
-				tabs[tab] = edit_view;
-				notebook.append_page(edit_view, new Gtk.Label(tab));
-				notebook.show_all();
-				this.core_connection.send_open(tab, file.get_path());
+				add_new_tab(tab);
+				core_connection.send_open(tab, file.get_path());
 			});
 		}
 	}
