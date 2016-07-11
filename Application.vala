@@ -47,6 +47,7 @@ class Application: Gtk.Application {
 		scrolled_window.add(edit_view);
 		notebook.append_page(scrolled_window, new Gtk.Label(tab));
 		notebook.show_all();
+		edit_view.grab_focus();
 	}
 
 	public override void activate() {

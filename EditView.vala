@@ -64,8 +64,29 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public override bool key_press_event(Gdk.EventKey event) {
-		im_context.filter_keypress(event);
-		return false;
+		if (!im_context.filter_keypress(event)) {
+			switch (event.keyval) {
+				case Gdk.Key.Return:
+					core_connection.send_edit(tab, "insert_newline");
+					break;
+				case Gdk.Key.BackSpace:
+					core_connection.send_edit(tab, "delete_backward");
+					break;
+				case Gdk.Key.Up:
+					core_connection.send_edit(tab, "move_up");
+					break;
+				case Gdk.Key.Right:
+					core_connection.send_edit(tab, "move_right");
+					break;
+				case Gdk.Key.Down:
+					core_connection.send_edit(tab, "move_down");
+					break;
+				case Gdk.Key.Left:
+					core_connection.send_edit(tab, "move_left");
+					break;
+			}
+		}
+		return true;
 	}
 	public override bool key_release_event(Gdk.EventKey event) {
 		im_context.filter_keypress(event);
@@ -73,7 +94,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	private void handle_commit(string str) {
-		stdout.printf("commit: %s\n", str);
+		core_connection.send_insert(tab, str);
 	}
 
 	public override bool button_press_event(Gdk.EventButton event) {

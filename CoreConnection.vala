@@ -47,7 +47,7 @@ class CoreConnection {
 	private bool receive() {
 		try {
 			string line = core_stdout.read_line_utf8(null);
-			stdout.printf("core to front-end: %s\n", line);
+			//stdout.printf("core to front-end: %s\n", line);
 			var parser = new Json.Parser();
 			parser.load_from_data(line);
 			var root = parser.get_root().get_object();
@@ -99,7 +99,7 @@ class CoreConnection {
 		send_message("new_tab");
 	}
 
-	public void send_edit(string method, string tab, Json.Object edit_params = new Json.Object()) {
+	public void send_edit(string tab, string method, Json.Object edit_params = new Json.Object()) {
 		var params = new Json.Object();
 		params.set_string_member("method", method);
 		params.set_string_member("tab", tab);
@@ -107,10 +107,16 @@ class CoreConnection {
 		send_message("edit", params);
 	}
 
+	public void send_insert(string tab, string chars) {
+		var params = new Json.Object();
+		params.set_string_member("chars", chars);
+		send_edit(tab, "insert", params);
+	}
+
 	public void send_open(string tab, string filename) {
 		var params = new Json.Object();
 		params.set_string_member("filename", filename);
-		send_edit("open", tab, params);
+		send_edit(tab, "open", params);
 	}
 
 	public void send_render_lines(string tab, int64 first_line, int64 last_line, owned ResponseHandler.Delegate response_handler) {
@@ -118,7 +124,7 @@ class CoreConnection {
 		params.set_int_member("first_line", first_line);
 		params.set_int_member("last_line", last_line);
 		response_handlers[id] = new ResponseHandler((owned)response_handler);
-		send_edit("render_lines", tab, params);
+		send_edit(tab, "render_lines", params);
 	}
 
 	private static DataInputStream create_input_stream(int fd, owned PollableSourceFunc func) {
