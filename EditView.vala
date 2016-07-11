@@ -65,6 +65,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	public override bool key_press_event(Gdk.EventKey event) {
 		if (!im_context.filter_keypress(event)) {
+			string suffix = (event.state & Gdk.ModifierType.SHIFT_MASK) != 0 ? "_and_modify_selection" : "";
 			switch (event.keyval) {
 				case Gdk.Key.Return:
 					core_connection.send_edit(tab, "insert_newline");
@@ -73,16 +74,19 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 					core_connection.send_edit(tab, "delete_backward");
 					break;
 				case Gdk.Key.Up:
-					core_connection.send_edit(tab, "move_up");
+					core_connection.send_edit(tab, "move_up" + suffix);
 					break;
 				case Gdk.Key.Right:
-					core_connection.send_edit(tab, "move_right");
+					core_connection.send_edit(tab, "move_right" + suffix);
 					break;
 				case Gdk.Key.Down:
-					core_connection.send_edit(tab, "move_down");
+					core_connection.send_edit(tab, "move_down" + suffix);
 					break;
 				case Gdk.Key.Left:
-					core_connection.send_edit(tab, "move_left");
+					core_connection.send_edit(tab, "move_left" + suffix);
+					break;
+				case Gdk.Key.Tab:
+					core_connection.send_insert(tab, "\t");
 					break;
 			}
 		}
@@ -111,7 +115,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public override bool button_press_event(Gdk.EventButton event) {
-		stdout.printf("button press: (%f, %f)\n", event.x, event.y);
 		int line, column;
 		convert_xy(event.x, event.y, out line, out column);
 		core_connection.send_click(tab, line, column, 0, 1);
@@ -128,6 +131,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	private void send_render_lines(int first_line, int last_line) {
+		first_line = int.max(first_line, this.first_line);
+		last_line = int.min(last_line, this.first_line + lines.length);
 		core_connection.send_render_lines(tab, first_line, last_line, (result) => {
 			update_lines(first_line, result.get_array());
 		});
