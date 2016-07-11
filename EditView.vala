@@ -23,6 +23,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private Pango.FontDescription font_description;
 	private double ascent;
 	private double line_height;
+	private Pango.TabArray tabs;
 	private int total_lines;
 	private int first_line;
 	private Pango.Layout[] lines;
@@ -53,6 +54,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		var metrics = get_pango_context().get_metrics(font_description, null);
 		ascent = metrics.get_ascent() / Pango.SCALE;
 		line_height = ascent + metrics.get_descent() / Pango.SCALE;
+		int tab_width = metrics.get_approximate_char_width() * 4;
+		tabs = new Pango.TabArray(1, false);
+		tabs.set_tab(0, Pango.TabAlign.LEFT, tab_width);
 		can_focus = true;
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
 	}
@@ -218,6 +222,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			var layout = Pango.cairo_create_layout(cr);
 			layout.set_text(text, -1);
 			layout.set_font_description(font_description);
+			layout.set_tabs(tabs);
 			cr.set_source_rgb(1, 1, 1);
 			cr.rectangle(0, (i-this.first_line)*line_height, surface.get_width(), line_height);
 			cr.fill();
