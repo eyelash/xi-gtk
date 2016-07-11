@@ -4,7 +4,7 @@
 
 ## to do
 
-- [ ] mouse input and selections
+- [x] mouse input and selections
 - [ ] saving
 - [ ] copy / paste
 - [ ] preferences (font family, font size, etc.)

@@ -54,7 +54,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		ascent = metrics.get_ascent() / Pango.SCALE;
 		line_height = ascent + metrics.get_descent() / Pango.SCALE;
 		can_focus = true;
-		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
+		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
 	}
 
 	public override bool draw(Cairo.Context cr) {
@@ -97,12 +97,34 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		core_connection.send_insert(tab, str);
 	}
 
+	private void convert_xy(double x, double y, out int line, out int column) {
+		line = (int)((y - y_offset) / line_height);
+		var layout = lines[line];
+		if (layout != null) {
+			int trailing;
+			layout.xy_to_index((int)(x*Pango.SCALE), 0, out column, out trailing);
+			column += trailing;
+		} else {
+			column = 0;
+		}
+		line += first_line;
+	}
+
 	public override bool button_press_event(Gdk.EventButton event) {
 		stdout.printf("button press: (%f, %f)\n", event.x, event.y);
-		return false;
+		int line, column;
+		convert_xy(event.x, event.y, out line, out column);
+		core_connection.send_click(tab, line, column, 0, 1);
+		return true;
 	}
 	public override bool button_release_event(Gdk.EventButton event) {
 		return false;
+	}
+	public override bool motion_notify_event(Gdk.EventMotion event) {
+		int line, column;
+		convert_xy(event.x, event.y, out line, out column);
+		core_connection.send_drag(tab, line, column, 0);
+		return true;
 	}
 
 	private void send_render_lines(int first_line, int last_line) {
@@ -194,7 +216,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			cr.set_source_rgb(1, 1, 1);
 			cr.rectangle(0, (i-this.first_line)*line_height, surface.get_width(), line_height);
 			cr.fill();
-			cr.set_source_rgb(0, 0, 0);
 			for (int j = 1; j < line.get_length(); j++) {
 				var annotation = line.get_array_element(j);
 				switch (annotation.get_string_element(0)) {
@@ -202,13 +223,25 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 						var cursor = annotation.get_int_element(1);
 						int x_pos;
 						layout.index_to_line_x((int)cursor, false, null, out x_pos);
+						cr.set_source_rgb(0, 0, 0);
 						cr.rectangle(x_pos/Pango.SCALE, (i-this.first_line)*line_height, 1, line_height);
 						cr.fill();
 						break;
 					case "fg":
 						break;
+					case "sel":
+						var selection_start_index = annotation.get_int_element(1);
+						var selection_end_index = annotation.get_int_element(2);
+						int selection_start, selection_end;
+						layout.index_to_line_x((int)selection_start_index, false, null, out selection_start);
+						layout.index_to_line_x((int)selection_end_index, false, null, out selection_end);
+						cr.set_source_rgb(0.8, 0.8, 0.8);
+						cr.rectangle(selection_start/Pango.SCALE, (i-this.first_line)*line_height, (selection_end-selection_start)/Pango.SCALE, line_height);
+						cr.fill();
+						break;
 				}
 			}
+			cr.set_source_rgb(0, 0, 0);
 			cr.move_to(0, (i-this.first_line)*line_height+ascent);
 			Pango.cairo_show_layout_line(cr, layout.get_line_readonly(0));
 			this.lines[i-this.first_line] = layout;

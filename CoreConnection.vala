@@ -88,7 +88,7 @@ class CoreConnection {
 			generator.to_stream(core_stdin);
 			core_stdin.write("\n".data);
 			core_stdin.flush();
-			stdout.printf("front-end to core: %s\n", generator.to_data(null));
+			//stdout.printf("front-end to core: %s\n", generator.to_data(null));
 		} catch (Error error) {
 			stderr.printf("error: %s\n", error.message);
 		}
@@ -117,6 +117,31 @@ class CoreConnection {
 		var params = new Json.Object();
 		params.set_string_member("filename", filename);
 		send_edit(tab, "open", params);
+	}
+
+	public void send_click(string tab, int64 line, int64 column, int64 modifiers, int64 click_count) {
+		var edit_params = new Json.Array();
+		edit_params.add_int_element(line);
+		edit_params.add_int_element(column);
+		edit_params.add_int_element(modifiers);
+		edit_params.add_int_element(click_count);
+		var params = new Json.Object();
+		params.set_string_member("method", "click");
+		params.set_string_member("tab", tab);
+		params.set_array_member("params", edit_params);
+		send_message("edit", params);
+	}
+
+	public void send_drag(string tab, int64 line, int64 column, int64 modifiers) {
+		var edit_params = new Json.Array();
+		edit_params.add_int_element(line);
+		edit_params.add_int_element(column);
+		edit_params.add_int_element(modifiers);
+		var params = new Json.Object();
+		params.set_string_member("method", "drag");
+		params.set_string_member("tab", tab);
+		params.set_array_member("params", edit_params);
+		send_message("edit", params);
 	}
 
 	public void send_render_lines(string tab, int64 first_line, int64 last_line, owned ResponseHandler.Delegate response_handler) {
