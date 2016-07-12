@@ -106,7 +106,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		var layout = lines[line];
 		if (layout != null) {
 			int trailing;
-			layout.xy_to_index((int)(x*Pango.SCALE), 0, out column, out trailing);
+			layout.get_line_readonly(0).x_to_index((int)(x*Pango.SCALE), out column, out trailing);
 			column += trailing;
 		} else {
 			column = 0;
@@ -145,13 +145,13 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		lines.resize(lines_length);
 		int surface_height = (int)(lines.length*line_height) + 1;
 		if (surface == null) {
-			surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width, surface_height, 0);
+			surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width*get_scale_factor(), surface_height*get_scale_factor(), 0);
 			cr = new Cairo.Context(surface);
 			cr.set_source_rgb(1, 1, 1);
 			cr.paint();
 			send_render_lines(first_line, first_line+lines.length);
-		} else if (allocation.width > surface.get_width()) {
-			var new_surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width, surface_height, 0);
+		} else if (allocation.width > surface.get_width()/get_scale_factor()) {
+			var new_surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width*get_scale_factor(), surface_height*get_scale_factor(), 0);
 			cr = new Cairo.Context(new_surface);
 			cr.set_source_rgb(1, 1, 1);
 			cr.paint();
@@ -159,8 +159,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			cr.paint();
 			surface = new_surface;
 			send_render_lines(first_line, first_line+lines.length);
-		} else if (allocation.width != surface.get_width() || surface_height != surface_height) {
-			var new_surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width, surface_height, 0);
+		} else if (allocation.width != surface.get_width()/get_scale_factor() || surface_height != surface.get_height()/get_scale_factor()) {
+			var new_surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width*get_scale_factor(), surface_height*get_scale_factor(), 0);
 			cr = new Cairo.Context(new_surface);
 			cr.set_source_rgb(1, 1, 1);
 			cr.paint();
@@ -219,7 +219,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			layout.set_text(text, -1);
 			layout.set_font_description(font_description);
 			cr.set_source_rgb(1, 1, 1);
-			cr.rectangle(0, (i-this.first_line)*line_height, surface.get_width(), line_height);
+			cr.rectangle(0, (i-this.first_line)*line_height, surface.get_width()/get_scale_factor(), line_height);
 			cr.fill();
 			for (int j = 1; j < line.get_length(); j++) {
 				var annotation = line.get_array_element(j);
@@ -238,8 +238,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 						var selection_start_index = annotation.get_int_element(1);
 						var selection_end_index = annotation.get_int_element(2);
 						int selection_start, selection_end;
-						layout.index_to_line_x((int)selection_start_index, false, null, out selection_start);
-						layout.index_to_line_x((int)selection_end_index, false, null, out selection_end);
+						layout.get_line_readonly(0).index_to_x((int)selection_start_index, false, out selection_start);
+						layout.get_line_readonly(0).index_to_x((int)selection_end_index, false, out selection_end);
 						cr.set_source_rgb(0.8, 0.8, 0.8);
 						cr.rectangle(selection_start/Pango.SCALE, (i-this.first_line)*line_height, (selection_end-selection_start)/Pango.SCALE, line_height);
 						cr.fill();
