@@ -30,7 +30,12 @@ class Application: Gtk.Application {
 
 	public override void startup() {
 		base.startup();
-		core_connection = new CoreConnection({"./xi-core"});
+
+		unowned string core_binary = GLib.Environment.get_variable("XI_CORE");
+		if (core_binary == null)
+			core_binary = "./xi-core";
+
+		core_connection = new CoreConnection({core_binary});
 		core_connection.update_received.connect(handle_update);
 		tabs = new HashTable<string, EditView>(str_hash, str_equal);
 		var window = new Gtk.ApplicationWindow(this);
