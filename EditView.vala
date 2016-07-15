@@ -15,6 +15,7 @@
 namespace Xi {
 
 class EditView: Gtk.DrawingArea, Gtk.Scrollable {
+	private File file;
 	private CoreConnection core_connection;
 	private Gtk.IMContext im_context;
 	private Cairo.ImageSurface surface;
@@ -44,8 +45,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 	public Gtk.ScrollablePolicy vscroll_policy { set; get; }
 
-	public EditView(string tab, CoreConnection core_connection) {
+	public EditView(string tab, File? file, CoreConnection core_connection) {
 		this.tab = tab;
+		this.file = file;
 		this.core_connection = core_connection;
 		im_context = new Gtk.IMMulticontext();
 		im_context.commit.connect(handle_commit);
@@ -55,6 +57,11 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		line_height = ascent + metrics.get_descent() / Pango.SCALE;
 		can_focus = true;
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
+		if (file != null) core_connection.send_open(tab, file.get_path());
+	}
+
+	~EditView() {
+		core_connection.send_delete_tab(tab);
 	}
 
 	public override bool draw(Cairo.Context cr) {
@@ -145,12 +152,14 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		lines.resize(lines_length);
 		int surface_height = (int)(lines.length*line_height) + 1;
 		if (surface == null) {
+			// create a new surface and request all visible lines
 			surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width*get_scale_factor(), surface_height*get_scale_factor(), 0);
 			cr = new Cairo.Context(surface);
 			cr.set_source_rgb(1, 1, 1);
 			cr.paint();
 			send_render_lines(first_line, first_line+lines.length);
 		} else if (allocation.width > surface.get_width()/get_scale_factor()) {
+			// create a new surface, draw the current surface to the new surface and request all visible lines
 			var new_surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width*get_scale_factor(), surface_height*get_scale_factor(), 0);
 			cr = new Cairo.Context(new_surface);
 			cr.set_source_rgb(1, 1, 1);
@@ -160,6 +169,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			surface = new_surface;
 			send_render_lines(first_line, first_line+lines.length);
 		} else if (allocation.width != surface.get_width()/get_scale_factor() || surface_height != surface.get_height()/get_scale_factor()) {
+			// create a new surface, draw the current surface to the new surface and request only the newly visible lines
 			var new_surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width*get_scale_factor(), surface_height*get_scale_factor(), 0);
 			cr = new Cairo.Context(new_surface);
 			cr.set_source_rgb(1, 1, 1);
@@ -258,6 +268,23 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		total_lines = (int)height;
 		update_lines((int)first_line, lines);
 		_vadjustment.upper = total_lines * line_height;
+	}
+
+	public void save() {
+		if (file == null) {
+			save_as();
+			return;
+		}
+		core_connection.send_save(tab, file.get_path());
+	}
+	public void save_as() {
+		var dialog = new Gtk.FileChooserDialog(null, get_toplevel() as Gtk.Window, Gtk.FileChooserAction.SAVE, "Cancel", Gtk.ResponseType.CANCEL, "Save", Gtk.ResponseType.ACCEPT);
+		dialog.do_overwrite_confirmation = true;
+		if (dialog.run() == Gtk.ResponseType.ACCEPT) {
+			file = dialog.get_file();
+			core_connection.send_save(tab, file.get_path());
+		}
+		dialog.destroy();
 	}
 }
 

@@ -7,6 +7,8 @@
 ## to do
 
 - [x] mouse input and selections
-- [ ] saving
+- [x] saving
+- [ ] follow the cursor (respect the `scrollto` parameter)
+- [ ] undo / redo
 - [ ] copy / paste
 - [ ] preferences (font family, font size, etc.)

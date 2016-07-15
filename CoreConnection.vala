@@ -99,11 +99,25 @@ class CoreConnection {
 		send_message("new_tab");
 	}
 
+	public void send_delete_tab(string tab) {
+		stdout.printf("delete tab %s\n", tab);
+		var params = new Json.Object();
+		params.set_string_member("tab", tab);
+		send_message("delete_tab", params);
+	}
+
 	public void send_edit(string tab, string method, Json.Object edit_params = new Json.Object()) {
 		var params = new Json.Object();
 		params.set_string_member("method", method);
 		params.set_string_member("tab", tab);
 		params.set_object_member("params", edit_params);
+		send_message("edit", params);
+	}
+	private void send_edit_array(string tab, string method, Json.Array edit_params) {
+		var params = new Json.Object();
+		params.set_string_member("method", method);
+		params.set_string_member("tab", tab);
+		params.set_array_member("params", edit_params);
 		send_message("edit", params);
 	}
 
@@ -119,29 +133,34 @@ class CoreConnection {
 		send_edit(tab, "open", params);
 	}
 
-	public void send_click(string tab, int64 line, int64 column, int64 modifiers, int64 click_count) {
-		var edit_params = new Json.Array();
-		edit_params.add_int_element(line);
-		edit_params.add_int_element(column);
-		edit_params.add_int_element(modifiers);
-		edit_params.add_int_element(click_count);
+	public void send_save(string tab, string filename) {
 		var params = new Json.Object();
-		params.set_string_member("method", "click");
-		params.set_string_member("tab", tab);
-		params.set_array_member("params", edit_params);
-		send_message("edit", params);
+		params.set_string_member("filename", filename);
+		send_edit(tab, "save", params);
+	}
+
+	/*public void send_scroll(string tab, int64 first_line, int64 last_line) {
+		var params = new Json.Array();
+		params.add_int_element(first_line);
+		params.add_int_element(last_line);
+		send_edit_array(tab, "scroll", params);
+	}*/
+
+	public void send_click(string tab, int64 line, int64 column, int64 modifiers, int64 click_count) {
+		var params = new Json.Array();
+		params.add_int_element(line);
+		params.add_int_element(column);
+		params.add_int_element(modifiers);
+		params.add_int_element(click_count);
+		send_edit_array(tab, "click", params);
 	}
 
 	public void send_drag(string tab, int64 line, int64 column, int64 modifiers) {
-		var edit_params = new Json.Array();
-		edit_params.add_int_element(line);
-		edit_params.add_int_element(column);
-		edit_params.add_int_element(modifiers);
-		var params = new Json.Object();
-		params.set_string_member("method", "drag");
-		params.set_string_member("tab", tab);
-		params.set_array_member("params", edit_params);
-		send_message("edit", params);
+		var params = new Json.Array();
+		params.add_int_element(line);
+		params.add_int_element(column);
+		params.add_int_element(modifiers);
+		send_edit_array(tab, "drag", params);
 	}
 
 	public void send_render_lines(string tab, int64 first_line, int64 last_line, owned ResponseHandler.Delegate response_handler) {
@@ -168,9 +187,13 @@ class CoreConnection {
 			core_stdin = new UnixOutputStream(stdin_fd, true);
 			core_stdout = create_input_stream(stdout_fd, receive);
 			core_stderr = create_input_stream(stderr_fd, () => {
-				//string line = core_stderr.read_line();
-				//stdout.printf("xi-core stderr: %s\n", line);
-				return false;
+				try {
+					core_stderr.read_line();
+					//stdout.printf("xi-core stderr: %s\n", line);
+				} catch (IOError error) {
+					stderr.printf("error: %s\n", error.message);
+				}
+				return true;
 			});
 		} catch (SpawnError error) {
 			stderr.printf("spawn error: %s\n", error.message);

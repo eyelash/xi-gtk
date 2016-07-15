@@ -28,6 +28,11 @@ class Application: Gtk.Application {
 		edit_view.update(first_line, height, lines, scrollto_line, scrollto_column);
 	}
 
+	private unowned EditView get_current_edit_view() {
+		int index = notebook.get_current_page();
+		return (notebook.get_nth_page(index) as Gtk.Bin).get_child() as EditView;
+	}
+
 	public override void startup() {
 		base.startup();
 
@@ -40,17 +45,23 @@ class Application: Gtk.Application {
 		tabs = new HashTable<string, EditView>(str_hash, str_equal);
 		var window = new Gtk.ApplicationWindow(this);
 		window.set_default_size(400, 400);
+		var save_action = new SimpleAction("save", null);
+		save_action.activate.connect(() => get_current_edit_view().save());
+		window.add_action(save_action);
+		const string[] accels = {"<Control>S"};
+		set_accels_for_action("win.save", accels);
 		notebook = new Gtk.Notebook();
 		window.add(notebook);
 		window.show_all();
 	}
 
-	private void add_new_tab(string tab) {
-		var edit_view = new EditView(tab, core_connection);
+	private void add_new_tab(string tab, File? file = null) {
+		var edit_view = new EditView(tab, file, core_connection);
 		tabs[tab] = edit_view;
 		var scrolled_window = new Gtk.ScrolledWindow(null, null);
 		scrolled_window.add(edit_view);
-		notebook.append_page(scrolled_window, new Gtk.Label(tab));
+		notebook.append_page(scrolled_window, new Gtk.Label(file != null ? file.get_basename() : tab));
+		//notebook.child_set_property(scrolled_window, "tab-expand", true);
 		notebook.show_all();
 		edit_view.grab_focus();
 	}
@@ -66,8 +77,7 @@ class Application: Gtk.Application {
 		foreach (var file in files) {
 			core_connection.send_new_tab((result) => {
 				var tab = result.get_string();
-				add_new_tab(tab);
-				core_connection.send_open(tab, file.get_path());
+				add_new_tab(tab, file);
 			});
 		}
 	}
