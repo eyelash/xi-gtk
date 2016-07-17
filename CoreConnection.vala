@@ -46,29 +46,31 @@ class CoreConnection {
 
 	private bool receive() {
 		try {
-			string line = core_stdout.read_line_utf8(null);
-			//stdout.printf("core to front-end: %s\n", line);
-			var parser = new Json.Parser();
-			parser.load_from_data(line);
-			var root = parser.get_root().get_object();
-			if (root.has_member("id")) {
-				// response
-				int id = (int)root.get_int_member("id");
-				var handler = response_handlers[id];
-				if (handler != null) {
-					var result = root.get_member("result");
-					handler.invoke(result);
-					response_handlers.remove(id);
+			do {
+				string line = core_stdout.read_line_utf8(null);
+				//stdout.printf("core to front-end: %s\n", line);
+				var parser = new Json.Parser();
+				parser.load_from_data(line);
+				var root = parser.get_root().get_object();
+				if (root.has_member("id")) {
+					// response
+					int id = (int)root.get_int_member("id");
+					var handler = response_handlers[id];
+					if (handler != null) {
+						var result = root.get_member("result");
+						handler.invoke(result);
+						response_handlers.remove(id);
+					}
+				} else {
+					var method = root.get_string_member("method");
+					var params = root.get_member("params");
+					switch (method) {
+						case "update":
+							handle_update(params.get_object());
+							break;
+					}
 				}
-			} else {
-				var method = root.get_string_member("method");
-				var params = root.get_member("params");
-				switch (method) {
-					case "update":
-						handle_update(params.get_object());
-						break;
-				}
-			}
+			} while (core_stdout.get_available() > 0);
 		} catch (Error error) {
 			stderr.printf("error: %s\n", error.message);
 		}
@@ -100,7 +102,6 @@ class CoreConnection {
 	}
 
 	public void send_delete_tab(string tab) {
-		stdout.printf("delete tab %s\n", tab);
 		var params = new Json.Object();
 		params.set_string_member("tab", tab);
 		send_message("delete_tab", params);
