@@ -52,7 +52,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		this.core_connection = core_connection;
 		im_context = new Gtk.IMMulticontext();
 		im_context.commit.connect(handle_commit);
-		font_description = Pango.FontDescription.from_string("Monospace 11");
+		var settings = new Settings("org.gnome.desktop.interface");
+		font_description = Pango.FontDescription.from_string(settings.get_string("monospace-font-name"));
 		var metrics = get_pango_context().get_metrics(font_description, null);
 		ascent = metrics.get_ascent() / Pango.SCALE;
 		line_height = ascent + metrics.get_descent() / Pango.SCALE;
