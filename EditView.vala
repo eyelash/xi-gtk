@@ -29,6 +29,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private Pango.Layout[] lines;
 
 	public string tab { private set; get; }
+	public string label { private set; get; }
 	public Gtk.Adjustment hadjustment { construct set; get; }
 	public Gtk.ScrollablePolicy hscroll_policy { set; get; }
 	private Gtk.Adjustment _vadjustment;
@@ -57,7 +58,12 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		line_height = ascent + metrics.get_descent() / Pango.SCALE;
 		can_focus = true;
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
-		if (file != null) core_connection.send_open(tab, file.get_path());
+		if (file != null) {
+			core_connection.send_open(tab, file.get_path());
+			label = file.get_basename();
+		} else {
+			label = "untitled";
+		}
 	}
 
 	~EditView() {
@@ -282,6 +288,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		dialog.do_overwrite_confirmation = true;
 		if (dialog.run() == Gtk.ResponseType.ACCEPT) {
 			file = dialog.get_file();
+			label = file.get_basename();
 			core_connection.send_save(tab, file.get_path());
 		}
 		dialog.destroy();

@@ -11,4 +11,5 @@
 - [ ] follow the cursor (respect the `scrollto` parameter)
 - [ ] undo / redo
 - [ ] copy / paste
+- [ ] i18n
 - [ ] preferences (font family, font size, etc.)

@@ -14,6 +14,25 @@
 
 namespace Xi {
 
+class Tab: Gtk.Box {
+	private EditView edit_view;
+
+	public signal void close_clicked(EditView edit_view);
+
+	public Tab(EditView edit_view) {
+		this.edit_view = edit_view;
+		var label = new Gtk.Label(edit_view.label);
+		edit_view.bind_property("label", label, "label");
+		set_center_widget(label);
+		var close_image = new Gtk.Image.from_icon_name("window-close-symbolic", Gtk.IconSize.MENU);
+		var close_button = new Gtk.Button();
+		close_button.add(close_image);
+		close_button.clicked.connect(() => close_clicked(this.edit_view));
+		pack_end(close_button, false, true);
+		show_all();
+	}
+}
+
 class Application: Gtk.Application {
 	private CoreConnection core_connection;
 	private Gtk.Notebook notebook;
@@ -51,6 +70,7 @@ class Application: Gtk.Application {
 		const string[] accels = {"<Control>S"};
 		set_accels_for_action("win.save", accels);
 		notebook = new Gtk.Notebook();
+		notebook.set_scrollable(true);
 		window.add(notebook);
 		window.show_all();
 	}
@@ -60,8 +80,15 @@ class Application: Gtk.Application {
 		tabs[tab] = edit_view;
 		var scrolled_window = new Gtk.ScrolledWindow(null, null);
 		scrolled_window.add(edit_view);
-		notebook.append_page(scrolled_window, new Gtk.Label(file != null ? file.get_basename() : tab));
-		//notebook.child_set_property(scrolled_window, "tab-expand", true);
+		var label = new Tab(edit_view);
+		label.close_clicked.connect((edit_view) => {
+			int index = notebook.page_num(edit_view.get_parent());
+			notebook.remove_page(index);
+			tabs.remove(edit_view.tab);
+		});
+		notebook.append_page(scrolled_window, label);
+		notebook.set_tab_reorderable(scrolled_window, true);
+		notebook.child_set_property(scrolled_window, "tab-expand", true);
 		notebook.show_all();
 		edit_view.grab_focus();
 	}
