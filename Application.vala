@@ -80,6 +80,7 @@ class Application: Gtk.Application {
 			notebook.child_set_property(scrolled_window, "tab-expand", true);
 			notebook.show_all();
 			notebook.set_current_page(notebook.get_n_pages()-1);
+			edit_view.grab_focus();
 		});
 	}
 
@@ -95,6 +96,16 @@ class Application: Gtk.Application {
 		tabs = new HashTable<string, EditView>(str_hash, str_equal);
 		window = new Gtk.ApplicationWindow(this);
 		window.set_default_size(400, 400);
+		add_accelerator("open", "<Control>O", () => {
+			var dialog = new Gtk.FileChooserDialog(null, window, Gtk.FileChooserAction.OPEN, "Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.ACCEPT);
+			dialog.select_multiple = true;
+			if (dialog.run() == Gtk.ResponseType.ACCEPT) {
+				foreach (var file in dialog.get_files()) {
+					add_new_tab(file);
+				}
+			}
+			dialog.destroy();
+		});
 		add_accelerator("save", "<Control>S", () => get_current_edit_view().save());
 		notebook = new Gtk.Notebook();
 		notebook.set_scrollable(true);
