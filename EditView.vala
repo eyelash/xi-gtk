@@ -255,6 +255,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			cr.set_source_rgb(1, 1, 1);
 			cr.rectangle(0, (i-this.first_line)*line_height, surface.get_width()/get_scale_factor(), line_height);
 			cr.fill();
+			var attributes = new Pango.AttrList();
 			for (int j = 1; j < line.get_length(); j++) {
 				var annotation = line.get_array_element(j);
 				switch (annotation.get_string_element(0)) {
@@ -263,19 +264,21 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 						cursor_position = {i, column};
 						break;
 					case "fg":
+						var color = annotation.get_int_element(3);
+						var attribute = Pango.attr_foreground_new((uint16)((color>>16)&0xFF)*256, (uint16)((color>>8)&0xFF)*256, (uint16)(color&0xFF)*256);
+						attribute.start_index = (uint)annotation.get_int_element(1);
+						attribute.end_index = (uint)annotation.get_int_element(2);
+						attributes.change((owned)attribute);
 						break;
 					case "sel":
-						var selection_start_index = annotation.get_int_element(1);
-						var selection_end_index = annotation.get_int_element(2);
-						int selection_start, selection_end;
-						layout.get_line_readonly(0).index_to_x((int)selection_start_index, false, out selection_start);
-						layout.get_line_readonly(0).index_to_x((int)selection_end_index, false, out selection_end);
-						cr.set_source_rgb(0.8, 0.8, 0.8);
-						cr.rectangle(selection_start/Pango.SCALE, (i-this.first_line)*line_height, (selection_end-selection_start)/Pango.SCALE, line_height);
-						cr.fill();
+						var attribute = Pango.attr_background_new(0xCC*256, 0xCC*256, 0xCC*256);
+						attribute.start_index = (uint)annotation.get_int_element(1);
+						attribute.end_index = (uint)annotation.get_int_element(2);
+						attributes.change((owned)attribute);
 						break;
 				}
 			}
+			layout.set_attributes(attributes);
 			cr.set_source_rgb(0, 0, 0);
 			cr.move_to(0, (i-this.first_line)*line_height+ascent);
 			Pango.cairo_show_layout_line(cr, layout.get_line_readonly(0));
