@@ -14,6 +14,11 @@
 
 namespace Xi {
 
+struct Position {
+	public int line;
+	public int column;
+}
+
 class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private File file;
 	private CoreConnection core_connection;
@@ -27,6 +32,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private int total_lines;
 	private int first_line;
 	private Pango.Layout[] lines;
+	private Position cursor_position;
 
 	public string tab { private set; get; }
 	public string label { private set; get; }
@@ -72,8 +78,19 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public override bool draw(Cairo.Context cr) {
+		// draw the lines
 		cr.set_source_surface(surface, 0, y_offset);
 		cr.paint();
+		// draw the cursors
+		int index = cursor_position.line - first_line;
+		if (index >= 0 && index < lines.length) {
+			int x_pos = 0;
+			var line = lines[index];
+			if (line != null) line.get_line_readonly(0).index_to_x(cursor_position.column, false, out x_pos);
+			cr.set_source_rgb(0, 0, 0);
+			cr.rectangle(x_pos/Pango.SCALE, y_offset+index*line_height, 1, line_height);
+			cr.fill();
+		}
 		return false;
 	}
 
@@ -242,12 +259,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 				var annotation = line.get_array_element(j);
 				switch (annotation.get_string_element(0)) {
 					case "cursor":
-						var cursor = annotation.get_int_element(1);
-						int x_pos;
-						layout.index_to_line_x((int)cursor, false, null, out x_pos);
-						cr.set_source_rgb(0, 0, 0);
-						cr.rectangle(x_pos/Pango.SCALE, (i-this.first_line)*line_height, 1, line_height);
-						cr.fill();
+						int column = (int)annotation.get_int_element(1);
+						cursor_position = {i, column};
 						break;
 					case "fg":
 						break;
