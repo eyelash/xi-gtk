@@ -44,9 +44,9 @@ class Application: Gtk.Application {
 		Object(application_id: "com.github.eyelash.xi-gtk", flags: ApplicationFlags.HANDLES_OPEN);
 	}
 
-	private void handle_update(string tab, int64 first_line, int64 height, Json.Array lines, int64 scrollto_line, int64 scrollto_column) {
+	private void handle_update(string tab, Json.Object update) {
 		var edit_view = tabs[tab];
-		edit_view.update(first_line, height, lines, scrollto_line, scrollto_column);
+		edit_view.update(update);
 	}
 
 	private delegate void ActionHandler();

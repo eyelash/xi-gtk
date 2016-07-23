@@ -287,10 +287,13 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		queue_draw();
 	}
 
-	public void update(int64 first_line, int64 height, Json.Array lines, int64 scrollto_line, int64 scrollto_column) {
-		total_lines = (int)height;
-		update_lines((int)first_line, lines);
-		_vadjustment.upper = total_lines * line_height;
+	public void update(Json.Object update) {
+		int first_line = (int)update.get_int_member("first_line");
+		update_lines(first_line, update.get_array_member("lines"));
+		if (update.has_member("height")) {
+			total_lines = (int)update.get_int_member("height");
+			_vadjustment.upper = total_lines * line_height;
+		}
 	}
 
 	public void save() {

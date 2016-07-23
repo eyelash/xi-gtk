@@ -18,7 +18,6 @@ class CoreConnection {
 	private Pid pid;
 	private UnixOutputStream core_stdin;
 	private DataInputStream core_stdout;
-	private DataInputStream core_stderr;
 	private int id;
 	public class ResponseHandler {
 		public delegate void Delegate(Json.Node result);
@@ -32,16 +31,12 @@ class CoreConnection {
 	}
 	private HashTable<int, ResponseHandler> response_handlers;
 
-	public signal void update_received(string tab, int64 first_line, int64 height, Json.Array lines, int64 scrollto_line, int64 scrollto_column);
+	public signal void update_received(string tab, Json.Object update);
 
 	private void handle_update(Json.Object params) {
 		var tab = params.get_string_member("tab");
 		var update = params.get_object_member("update");
-		var first_line = update.get_int_member("first_line");
-		var height = update.get_int_member("height");
-		var lines = update.get_array_member("lines");
-		var scrollto = update.get_array_member("scrollto");
-		update_received(tab, first_line, height, lines, scrollto.get_int_element(0), scrollto.get_int_element(1));
+		update_received(tab, update);
 	}
 
 	private bool receive() {
@@ -183,19 +178,10 @@ class CoreConnection {
 	public CoreConnection(string[] command) {
 		response_handlers = new HashTable<int, ResponseHandler>(direct_hash, direct_equal);
 		try {
-			int stdin_fd, stdout_fd, stderr_fd;
-			Process.spawn_async_with_pipes(null, command, null, SpawnFlags.SEARCH_PATH, null, out pid, out stdin_fd, out stdout_fd, out stderr_fd);
-			core_stdin = new UnixOutputStream(stdin_fd, true);
-			core_stdout = create_input_stream(stdout_fd, receive);
-			core_stderr = create_input_stream(stderr_fd, () => {
-				try {
-					core_stderr.read_line();
-					//stdout.printf("xi-core stderr: %s\n", line);
-				} catch (IOError error) {
-					stderr.printf("error: %s\n", error.message);
-				}
-				return true;
-			});
+			int core_stdin_fd, core_stdout_fd;
+			Process.spawn_async_with_pipes(null, command, null, SpawnFlags.SEARCH_PATH|SpawnFlags.STDERR_TO_DEV_NULL, null, out pid, out core_stdin_fd, out core_stdout_fd, null);
+			core_stdin = new UnixOutputStream(core_stdin_fd, true);
+			core_stdout = create_input_stream(core_stdout_fd, receive);
 		} catch (SpawnError error) {
 			stderr.printf("spawn error: %s\n", error.message);
 		}
