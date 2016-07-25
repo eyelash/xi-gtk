@@ -104,6 +104,12 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 				case Gdk.Key.BackSpace:
 					core_connection.send_edit(tab, "delete_backward");
 					break;
+				case Gdk.Key.Delete:
+					core_connection.send_edit(tab, "delete_forward");
+					break;
+				case Gdk.Key.Tab:
+					core_connection.send_edit(tab, "insert_tab");
+					break;
 				case Gdk.Key.Up:
 					core_connection.send_edit(tab, "move_up" + suffix);
 					break;
@@ -115,9 +121,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 					break;
 				case Gdk.Key.Left:
 					core_connection.send_edit(tab, "move_left" + suffix);
-					break;
-				case Gdk.Key.Tab:
-					core_connection.send_insert(tab, "\t");
 					break;
 			}
 		}
