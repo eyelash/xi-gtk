@@ -135,12 +135,12 @@ class CoreConnection {
 		send_edit(tab, "save", params);
 	}
 
-	/*public void send_scroll(string tab, int64 first_line, int64 last_line) {
+	public void send_scroll(string tab, int64 first_line, int64 last_line) {
 		var params = new Json.Array();
 		params.add_int_element(first_line);
 		params.add_int_element(last_line);
 		send_edit_array(tab, "scroll", params);
-	}*/
+	}
 
 	public void send_click(string tab, int64 line, int64 column, int64 modifiers, int64 click_count) {
 		var params = new Json.Array();

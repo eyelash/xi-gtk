@@ -176,7 +176,10 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		base.size_allocate(allocation);
 		int lines_length = (int)(allocation.height / line_height) + 2;
 		int previous_lines_length = lines.length;
-		lines.resize(lines_length);
+		if (lines_length != previous_lines_length) {
+			lines.resize(lines_length);
+			core_connection.send_scroll(tab, first_line, first_line+lines.length);
+		}
 		int surface_height = (int)(lines.length*line_height) + 1;
 		if (surface == null) {
 			// create a new surface and request all visible lines
@@ -223,6 +226,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			cr.set_source_surface(surface, 0, -diff*line_height);
 			cr.paint();
 			send_render_lines(previous_first_line+lines.length, first_line+lines.length);
+			core_connection.send_scroll(tab, first_line, first_line+lines.length);
 		} else if (first_line < previous_first_line) {
 			int diff = previous_first_line - first_line;
 			for (int i = lines.length-diff-1; i >= 0; i--) {
@@ -236,6 +240,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			cr.paint();
 			surface = new_surface;
 			send_render_lines(first_line, previous_first_line);
+			core_connection.send_scroll(tab, first_line, first_line+lines.length);
 		}
 		y_offset = Math.round(first_line*line_height - value);
 		queue_draw();
