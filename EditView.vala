@@ -272,14 +272,35 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 						cursor_position = {i, column};
 						break;
 					case "fg":
-						var color = annotation.get_int_element(3);
-						var attribute = Pango.attr_foreground_new((uint16)((color>>16)&0xFF)*256, (uint16)((color>>8)&0xFF)*256, (uint16)(color&0xFF)*256);
-						attribute.start_index = (uint)annotation.get_int_element(1);
-						attribute.end_index = (uint)annotation.get_int_element(2);
+						uint start_index = (uint)annotation.get_int_element(1);
+						uint end_index = (uint)annotation.get_int_element(2);
+						uint32 color = (uint32)annotation.get_int_element(3);
+						var attribute = Pango.attr_foreground_new((uint16)((color>>16)&0xFF)<<8, (uint16)((color>>8)&0xFF)<<8, (uint16)(color&0xFF)<<8);
+						attribute.start_index = start_index;
+						attribute.end_index = end_index;
 						attributes.change((owned)attribute);
+						int font_style = (int)annotation.get_int_element(4);
+						if ((font_style & 1) != 0) {
+							attribute = Pango.attr_weight_new(Pango.Weight.BOLD);
+							attribute.start_index = start_index;
+							attribute.end_index = end_index;
+							attributes.change((owned)attribute);
+						}
+						if ((font_style & 2) != 0) {
+							attribute = Pango.attr_underline_new(Pango.Underline.SINGLE);
+							attribute.start_index = start_index;
+							attribute.end_index = end_index;
+							attributes.change((owned)attribute);
+						}
+						if ((font_style & 4) != 0) {
+							attribute = Pango.attr_style_new(Pango.Style.ITALIC);
+							attribute.start_index = start_index;
+							attribute.end_index = end_index;
+							attributes.change((owned)attribute);
+						}
 						break;
 					case "sel":
-						var attribute = Pango.attr_background_new(0xCC*256, 0xCC*256, 0xCC*256);
+						var attribute = Pango.attr_background_new(0xCC<<8, 0xCC<<8, 0xCC<<8);
 						attribute.start_index = (uint)annotation.get_int_element(1);
 						attribute.end_index = (uint)annotation.get_int_element(2);
 						attributes.change((owned)attribute);
