@@ -4,6 +4,23 @@
 
 ![screenshot](https://raw.githubusercontent.com/eyelash/xi-gtk/master/screenshot.png)
 
+## Instructions
+
+```sh
+git clone https://github.com/google/xi-editor.git
+cd xi-editor/rust
+cargo install
+export PATH=~/.cargo/bin:$PATH
+cd ../..
+git clone https://github.com/eyelash/xi-gtk.git
+cd xi-gtk
+mkdir build
+cd build
+meson ..
+ninja
+./xi-gtk
+```
+
 ## Shortcuts
 
 Shortcut                                         | Command
@@ -13,7 +30,7 @@ Shortcut                                         | Command
 <kbd>Control</kbd>+<kbd>S</kbd>                  | Save
 <kbd>Control</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | Save As
 
-## to do
+## To Do
 
 - [x] mouse input and selections
 - [x] saving

@@ -88,8 +88,9 @@ class Application: Gtk.Application {
 		base.startup();
 
 		unowned string core_binary = GLib.Environment.get_variable("XI_CORE");
-		if (core_binary == null)
-			core_binary = "./xi-core";
+		if (core_binary == null) {
+			core_binary = "xi-core";
+		}
 
 		core_connection = new CoreConnection({core_binary});
 		core_connection.update_received.connect(handle_update);
