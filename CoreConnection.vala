@@ -179,7 +179,7 @@ class CoreConnection {
 		response_handlers = new HashTable<int, ResponseHandler>(direct_hash, direct_equal);
 		try {
 			int core_stdin_fd, core_stdout_fd;
-			Process.spawn_async_with_pipes(null, command, null, SpawnFlags.SEARCH_PATH|SpawnFlags.STDERR_TO_DEV_NULL, null, out pid, out core_stdin_fd, out core_stdout_fd, null);
+			Process.spawn_async_with_pipes(null, command, null, SpawnFlags.SEARCH_PATH, null, out pid, out core_stdin_fd, out core_stdout_fd, null);
 			core_stdin = new UnixOutputStream(core_stdin_fd, true);
 			core_stdout = create_input_stream(core_stdout_fd, receive);
 		} catch (SpawnError error) {

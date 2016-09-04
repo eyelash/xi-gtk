@@ -95,7 +95,8 @@ class Application: Gtk.Application {
 		core_connection.update_received.connect(handle_update);
 		tabs = new HashTable<string, EditView>(str_hash, str_equal);
 		window = new Gtk.ApplicationWindow(this);
-		window.set_default_size(400, 400);
+		window.set_default_size(600, 400);
+		add_accelerator("new", "<Control>N", () => add_new_tab());
 		add_accelerator("open", "<Control>O", () => {
 			var dialog = new Gtk.FileChooserDialog(null, window, Gtk.FileChooserAction.OPEN, "Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.ACCEPT);
 			dialog.select_multiple = true;
@@ -107,6 +108,7 @@ class Application: Gtk.Application {
 			dialog.destroy();
 		});
 		add_accelerator("save", "<Control>S", () => get_current_edit_view().save());
+		add_accelerator("save-as", "<Control><Shift>S", () => get_current_edit_view().save_as());
 		notebook = new Gtk.Notebook();
 		notebook.set_scrollable(true);
 		window.add(notebook);
