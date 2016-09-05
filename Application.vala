@@ -14,30 +14,45 @@
 
 namespace Xi {
 
-class Tab: Gtk.Box {
+class TabLabel: Gtk.Box {
 	private EditView edit_view;
 
 	public signal void close_clicked(EditView edit_view);
 
-	public Tab(EditView edit_view) {
+	public TabLabel(EditView edit_view) {
 		this.edit_view = edit_view;
+
 		var label = new Gtk.Label(edit_view.label);
 		edit_view.bind_property("label", label, "label");
 		set_center_widget(label);
+
 		var close_image = new Gtk.Image.from_icon_name("window-close-symbolic", Gtk.IconSize.MENU);
 		var close_button = new Gtk.Button();
 		close_button.add(close_image);
 		close_button.relief = Gtk.ReliefStyle.NONE;
+		close_button.focus_on_click = false;
 		close_button.clicked.connect(() => close_clicked(this.edit_view));
 		pack_end(close_button, false, true);
+
 		show_all();
+	}
+}
+
+class Notebook: Gtk.Notebook {
+	public unowned EditView get_current_edit_view() {
+		int index = get_current_page();
+		return (get_nth_page(index) as Gtk.Bin).get_child() as EditView;
+	}
+
+	public override void grab_focus() {
+		get_current_edit_view().grab_focus();
 	}
 }
 
 class Application: Gtk.Application {
 	private CoreConnection core_connection;
 	private Gtk.ApplicationWindow window;
-	private Gtk.Notebook notebook;
+	private Notebook notebook;
 	private HashTable<string, EditView> tabs;
 
 	public Application() {
@@ -57,11 +72,6 @@ class Application: Gtk.Application {
 		set_accels_for_action("win."+action_name, {accelerator});
 	}
 
-	private unowned EditView get_current_edit_view() {
-		int index = notebook.get_current_page();
-		return (notebook.get_nth_page(index) as Gtk.Bin).get_child() as EditView;
-	}
-
 	private void add_new_tab(File? file = null) {
 		core_connection.send_new_tab((result) => {
 			string tab = result.get_string();
@@ -69,7 +79,7 @@ class Application: Gtk.Application {
 			tabs[tab] = edit_view;
 			var scrolled_window = new Gtk.ScrolledWindow(null, null);
 			scrolled_window.add(edit_view);
-			var label = new Tab(edit_view);
+			var label = new TabLabel(edit_view);
 			label.close_clicked.connect((edit_view) => {
 				int index = notebook.page_num(edit_view.get_parent());
 				notebook.remove_page(index);
@@ -79,7 +89,7 @@ class Application: Gtk.Application {
 			notebook.set_tab_reorderable(scrolled_window, true);
 			notebook.child_set_property(scrolled_window, "tab-expand", true);
 			notebook.show_all();
-			notebook.set_current_page(notebook.get_n_pages()-1);
+			notebook.set_current_page(notebook.page_num(scrolled_window));
 			edit_view.grab_focus();
 		});
 	}
@@ -108,9 +118,9 @@ class Application: Gtk.Application {
 			}
 			dialog.destroy();
 		});
-		add_accelerator("save", "<Control>S", () => get_current_edit_view().save());
-		add_accelerator("save-as", "<Control><Shift>S", () => get_current_edit_view().save_as());
-		notebook = new Gtk.Notebook();
+		add_accelerator("save", "<Control>S", () => notebook.get_current_edit_view().save());
+		add_accelerator("save-as", "<Control><Shift>S", () => notebook.get_current_edit_view().save_as());
+		notebook = new Notebook();
 		notebook.set_scrollable(true);
 		window.add(notebook);
 		window.show_all();
