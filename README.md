@@ -1,6 +1,7 @@
 # xi-gtk
 
 [![Join the chat at https://gitter.im/eyelash/xi-gtk](https://badges.gitter.im/eyelash/xi-gtk.svg)](https://gitter.im/eyelash/xi-gtk)
+[![vector.im | #xi-gtk](https://img.shields.io/badge/vector.im-%23xi--gtk-76cfa6.svg)](https://vector.im/beta/#/room/#xi-gtk:matrix.org)
 
 ![screenshot](https://raw.githubusercontent.com/eyelash/xi-gtk/master/screenshot.png)
 
