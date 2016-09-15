@@ -22,6 +22,7 @@ struct Position {
 class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private File file;
 	private CoreConnection core_connection;
+	private Gdk.Window child_window;
 	private Gtk.IMContext im_context;
 	private Cairo.ImageSurface surface;
 	private Cairo.Context cr;
@@ -75,6 +76,31 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	~EditView() {
 		core_connection.send_delete_tab(tab);
+	}
+
+	public override void realize() {
+		base.realize();
+		var attr = Gdk.WindowAttr() {
+			window_type = Gdk.WindowType.CHILD,
+			cursor = new Gdk.Cursor.from_name(get_display(), "text")
+		};
+		child_window = new Gdk.Window(get_window(), attr, Gdk.WindowAttributesType.CURSOR);
+		register_window(child_window);
+		im_context.set_client_window(child_window);
+	}
+	public override void unrealize() {
+		unregister_window(child_window);
+		child_window.destroy();
+		base.unrealize();
+	}
+
+	public override void map() {
+		base.map();
+		child_window.show();
+	}
+	public override void unmap() {
+		child_window.hide();
+		base.unmap();
 	}
 
 	public override bool draw(Cairo.Context cr) {
@@ -212,6 +238,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			}
 		}
 		_vadjustment.page_size = allocation.height;
+		child_window.move_resize(allocation.x, allocation.y, allocation.width, allocation.height);
 	}
 
 	private void scroll() {
