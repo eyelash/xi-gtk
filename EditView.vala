@@ -64,6 +64,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		var metrics = get_pango_context().get_metrics(font_description, null);
 		ascent = metrics.get_ascent() / Pango.SCALE;
 		line_height = ascent + metrics.get_descent() / Pango.SCALE;
+		set_has_window(true);
 		can_focus = true;
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
 		if (file != null) {
@@ -80,9 +81,10 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	public override void realize() {
 		base.realize();
+		if (get_has_window()) get_window().set_cursor(new Gdk.Cursor.for_display(get_display(), Gdk.CursorType.XTERM));
 		var attr = Gdk.WindowAttr() {
 			window_type = Gdk.WindowType.CHILD,
-			cursor = new Gdk.Cursor.from_name(get_display(), "text")
+			cursor = new Gdk.Cursor.for_display(get_display(), Gdk.CursorType.XTERM)
 		};
 		child_window = new Gdk.Window(get_window(), attr, Gdk.WindowAttributesType.CURSOR);
 		register_window(child_window);
