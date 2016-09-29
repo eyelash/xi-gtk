@@ -317,11 +317,21 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public void update(Json.Object update) {
-		int first_line = (int)update.get_int_member("first_line");
-		update_lines(first_line, update.get_array_member("lines"));
 		if (update.has_member("height")) {
 			total_lines = (int)update.get_int_member("height");
 			_vadjustment.upper = total_lines * line_height;
+		}
+		if (surface == null) return;
+		int first_line = (int)update.get_int_member("first_line");
+		update_lines(first_line, update.get_array_member("lines"));
+		if (update.has_member("scrollto")) {
+			var scrollto_line = update.get_array_member("scrollto").get_int_element(0);
+			if (scrollto_line * line_height < this.first_line * line_height - y_offset) {
+				((get_parent() as Gtk.ScrolledWindow).get_vscrollbar() as Gtk.Range).set_value(scrollto_line * line_height);
+			}
+			else if ((scrollto_line + 1) * line_height > this.first_line * line_height - y_offset + get_allocated_height()) {
+				((get_parent() as Gtk.ScrolledWindow).get_vscrollbar() as Gtk.Range).set_value((scrollto_line + 1) * line_height - get_allocated_height());
+			}
 		}
 	}
 

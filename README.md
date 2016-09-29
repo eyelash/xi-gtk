@@ -34,7 +34,7 @@ Shortcut                                         | Command
 
 - [x] mouse input and selections
 - [x] saving
-- [ ] follow the cursor (respect the `scrollto` parameter)
+- [x] follow the cursor (respect the `scrollto` parameter)
 - [ ] undo / redo
 - [ ] copy / paste
 - [ ] i18n
