@@ -39,6 +39,36 @@ class TabLabel: Gtk.Box {
 }
 
 class Notebook: Gtk.Notebook {
+	private HashTable<string, EditView> tabs;
+
+	public Notebook() {
+		tabs = new HashTable<string, EditView>(str_hash, str_equal);
+		set_scrollable(true);
+	}
+
+	public void add_edit_view(EditView edit_view) {
+		tabs[edit_view.tab] = edit_view;
+		var scrolled_window = new Gtk.ScrolledWindow(null, null);
+		scrolled_window.add(edit_view);
+		var label = new TabLabel(edit_view);
+		label.close_clicked.connect((edit_view) => {
+			int index = page_num(edit_view.get_parent());
+			remove_page(index);
+			tabs.remove(edit_view.tab);
+		});
+		append_page(scrolled_window, label);
+		set_tab_reorderable(scrolled_window, true);
+		child_set_property(scrolled_window, "tab-expand", true);
+		show_all();
+		set_current_page(page_num(scrolled_window));
+		edit_view.grab_focus();
+	}
+
+	public void update(string tab, Json.Object update) {
+		var edit_view = tabs[tab];
+		edit_view.update(update);
+	}
+
 	public unowned EditView get_current_edit_view() {
 		int index = get_current_page();
 		return (get_nth_page(index) as Gtk.Bin).get_child() as EditView;
@@ -53,15 +83,9 @@ class Application: Gtk.Application {
 	private CoreConnection core_connection;
 	private Gtk.ApplicationWindow window;
 	private Notebook notebook;
-	private HashTable<string, EditView> tabs;
 
 	public Application() {
 		Object(application_id: "com.github.eyelash.xi-gtk", flags: ApplicationFlags.HANDLES_OPEN);
-	}
-
-	private void handle_update(string tab, Json.Object update) {
-		var edit_view = tabs[tab];
-		edit_view.update(update);
 	}
 
 	private delegate void ActionHandler();
@@ -75,22 +99,7 @@ class Application: Gtk.Application {
 	private void add_new_tab(File? file = null) {
 		core_connection.send_new_tab((result) => {
 			string tab = result.get_string();
-			var edit_view = new EditView(tab, file, core_connection);
-			tabs[tab] = edit_view;
-			var scrolled_window = new Gtk.ScrolledWindow(null, null);
-			scrolled_window.add(edit_view);
-			var label = new TabLabel(edit_view);
-			label.close_clicked.connect((edit_view) => {
-				int index = notebook.page_num(edit_view.get_parent());
-				notebook.remove_page(index);
-				tabs.remove(edit_view.tab);
-			});
-			notebook.append_page(scrolled_window, label);
-			notebook.set_tab_reorderable(scrolled_window, true);
-			notebook.child_set_property(scrolled_window, "tab-expand", true);
-			notebook.show_all();
-			notebook.set_current_page(notebook.page_num(scrolled_window));
-			edit_view.grab_focus();
+			notebook.add_edit_view(new EditView(tab, file, core_connection));
 		});
 	}
 
@@ -103,8 +112,6 @@ class Application: Gtk.Application {
 		}
 
 		core_connection = new CoreConnection({core_binary});
-		core_connection.update_received.connect(handle_update);
-		tabs = new HashTable<string, EditView>(str_hash, str_equal);
 		window = new Gtk.ApplicationWindow(this);
 		window.set_default_size(600, 400);
 		add_accelerator("new", "<Control>N", () => add_new_tab());
@@ -121,7 +128,7 @@ class Application: Gtk.Application {
 		add_accelerator("save", "<Control>S", () => notebook.get_current_edit_view().save());
 		add_accelerator("save-as", "<Control><Shift>S", () => notebook.get_current_edit_view().save_as());
 		notebook = new Notebook();
-		notebook.set_scrollable(true);
+		core_connection.update_received.connect(notebook.update);
 		window.add(notebook);
 		window.show_all();
 	}
