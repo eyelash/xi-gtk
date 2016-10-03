@@ -68,6 +68,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		line_height = ascent + metrics.get_descent() / Pango.SCALE;
 		blink_time = settings.get_int("cursor-blink-time") / 2;
 		can_focus = true;
+		set_has_window(true);
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
 		if (file != null) {
 			core_connection.send_open(tab, file.get_path());
@@ -79,6 +80,11 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	~EditView() {
 		core_connection.send_delete_tab(tab);
+	}
+
+	public override void realize() {
+		base.realize();
+		get_window().set_cursor(new Gdk.Cursor.for_display(get_display(), Gdk.CursorType.XTERM));
 	}
 
 	public override bool draw(Cairo.Context cr) {
