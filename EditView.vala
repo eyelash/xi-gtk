@@ -134,6 +134,12 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 				case Gdk.Key.Left:
 					core_connection.send_edit(tab, "move_left" + suffix);
 					break;
+				case Gdk.Key.Page_Up:
+					core_connection.send_edit(tab, "page_up" + suffix);
+					break;
+				case Gdk.Key.Page_Down:
+					core_connection.send_edit(tab, "page_down" + suffix);
+					break;
 			}
 		}
 		return true;
