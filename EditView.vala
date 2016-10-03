@@ -33,6 +33,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private int first_line;
 	private Pango.Layout[] lines;
 	private Position cursor_position;
+	private int blink_time;
+	private int blink_counter;
+	private TimeoutSource blink_source;
 
 	public string tab { private set; get; }
 	public string label { private set; get; }
@@ -63,6 +66,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		var metrics = get_pango_context().get_metrics(font_description, null);
 		ascent = metrics.get_ascent() / Pango.SCALE;
 		line_height = ascent + metrics.get_descent() / Pango.SCALE;
+		blink_time = settings.get_int("cursor-blink-time") / 2;
 		can_focus = true;
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
 		if (file != null) {
@@ -82,16 +86,18 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		cr.set_source_surface(surface, 0, y_offset);
 		cr.paint();
 		// draw the cursors
-		int index = cursor_position.line - first_line;
-		if (index >= 0 && index < lines.length) {
-			int x_pos = 0;
-			var line = lines[index];
-			if (line != null) line.get_line_readonly(0).index_to_x(cursor_position.column, false, out x_pos);
-			cr.set_source_rgb(0, 0, 0);
-			cr.rectangle(x_pos/Pango.SCALE, y_offset+index*line_height, 1, line_height);
-			cr.fill();
+		if (blink_counter % 2 == 0) {
+			int index = cursor_position.line - first_line;
+			if (index >= 0 && index < lines.length) {
+				int x_pos = 0;
+				var line = lines[index];
+				if (line != null) line.get_line_readonly(0).index_to_x(cursor_position.column, false, out x_pos);
+				cr.set_source_rgb(0, 0, 0);
+				cr.rectangle(x_pos/Pango.SCALE, y_offset+index*line_height, 1, line_height);
+				cr.fill();
+			}
 		}
-		return false;
+		return Gdk.EVENT_STOP;
 	}
 
 	public override bool key_press_event(Gdk.EventKey event) {
@@ -251,6 +257,19 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		natural_height = minimum_height;
 	}
 
+	private bool blink() {
+		blink_counter++;
+		queue_draw();
+		return blink_counter < 18;
+	}
+	private void blink_start() {
+		if (blink_source != null) blink_source.destroy();
+		blink_counter = 0;
+		blink_source = new TimeoutSource(blink_time);
+		blink_source.set_callback(blink);
+		blink_source.attach(null);
+	}
+
 	private void update_lines(int first_line, Json.Array lines) {
 		int start = int.max(this.first_line, first_line);
 		int end = int.min(this.first_line + this.lines.length, first_line + (int)lines.get_length());
@@ -324,6 +343,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		if (surface == null) return;
 		int first_line = (int)update.get_int_member("first_line");
 		update_lines(first_line, update.get_array_member("lines"));
+		blink_start();
 		if (update.has_member("scrollto")) {
 			var scrollto_line = update.get_array_member("scrollto").get_int_element(0);
 			if (scrollto_line * line_height < this.first_line * line_height - y_offset) {
