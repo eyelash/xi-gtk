@@ -6,19 +6,34 @@
 
 ## Instructions
 
+### Install the Dependencies
+
+```sh
+# Debian/Ubuntu:
+sudo apt install build-essential git cargo valac meson libgtk-3-dev libjson-glib-dev
+# Arch:
+sudo pacman -S git cargo vala meson
+```
+
+### Build and Install xi-core
+
 ```sh
 git clone https://github.com/google/xi-editor.git
 cd xi-editor/rust
 cargo install
 export PATH=~/.cargo/bin:$PATH
-cd ../..
+```
+
+### Build and Install xi-gtk
+
+```sh
 git clone https://github.com/eyelash/xi-gtk.git
 cd xi-gtk
 mkdir build
 cd build
 meson ..
 ninja
-./xi-gtk
+sudo ninja install
 ```
 
 ## Shortcuts
