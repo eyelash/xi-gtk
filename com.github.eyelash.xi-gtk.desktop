@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=Xi
+Icon=accessories-text-editor
+Exec=xi-gtk %F
+Terminal=false
