@@ -72,11 +72,7 @@ class CoreConnection {
 		return true;
 	}
 
-	private void send_message(string method, Json.Object params = new Json.Object()) {
-		var root = new Json.Object();
-		root.set_int_member("id", id++);
-		root.set_string_member("method", method);
-		root.set_object_member("params", params);
+	private void send(Json.Object root) {
 		var root_node = new Json.Node(Json.NodeType.OBJECT);
 		root_node.set_object(root);
 		var generator = new Json.Generator();
@@ -87,19 +83,24 @@ class CoreConnection {
 			core_stdin.flush();
 			//stdout.printf("front-end to core: %s\n", generator.to_data(null));
 		} catch (Error error) {
-			stderr.printf("error: %s\n", error.message);
+			critical(error.message);
 		}
 	}
 
-	public void send_new_tab(owned ResponseHandler.Delegate response_handler) {
-		response_handlers[id] = new ResponseHandler((owned)response_handler);
-		send_message("new_tab");
+	private void send_notification(string method, Json.Object params) {
+		var root = new Json.Object();
+		root.set_string_member("method", method);
+		root.set_object_member("params", params);
+		send(root);
 	}
 
-	public void send_delete_tab(string tab) {
-		var params = new Json.Object();
-		params.set_string_member("tab", tab);
-		send_message("delete_tab", params);
+	private void send_request(string method, Json.Object params, ResponseHandler response_handler) {
+		response_handlers[id] = response_handler;
+		var root = new Json.Object();
+		root.set_int_member("id", id++);
+		root.set_string_member("method", method);
+		root.set_object_member("params", params);
+		send(root);
 	}
 
 	public void send_edit(string tab, string method, Json.Object edit_params = new Json.Object()) {
@@ -107,14 +108,33 @@ class CoreConnection {
 		params.set_string_member("method", method);
 		params.set_string_member("tab", tab);
 		params.set_object_member("params", edit_params);
-		send_message("edit", params);
+		send_notification("edit", params);
 	}
+
 	private void send_edit_array(string tab, string method, Json.Array edit_params) {
 		var params = new Json.Object();
 		params.set_string_member("method", method);
 		params.set_string_member("tab", tab);
 		params.set_array_member("params", edit_params);
-		send_message("edit", params);
+		send_notification("edit", params);
+	}
+
+	private void send_edit_request(string tab, string method, Json.Object edit_params, ResponseHandler response_handler) {
+		var params = new Json.Object();
+		params.set_string_member("method", method);
+		params.set_string_member("tab", tab);
+		params.set_object_member("params", edit_params);
+		send_request("edit", params, response_handler);
+	}
+
+	public void send_new_tab(owned ResponseHandler.Delegate response_handler) {
+		send_request("new_tab", new Json.Object(), new ResponseHandler((owned)response_handler));
+	}
+
+	public void send_delete_tab(string tab) {
+		var params = new Json.Object();
+		params.set_string_member("tab", tab);
+		send_notification("delete_tab", params);
 	}
 
 	public void send_insert(string tab, string chars) {
@@ -163,8 +183,7 @@ class CoreConnection {
 		var params = new Json.Object();
 		params.set_int_member("first_line", first_line);
 		params.set_int_member("last_line", last_line);
-		response_handlers[id] = new ResponseHandler((owned)response_handler);
-		send_edit(tab, "render_lines", params);
+		send_edit_request(tab, "render_lines", params, new ResponseHandler((owned)response_handler));
 	}
 
 	private static DataInputStream create_input_stream(int fd, owned PollableSourceFunc func) {
