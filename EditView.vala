@@ -19,6 +19,83 @@ struct Position {
 	public int column;
 }
 
+struct Line {
+	Pango.Layout layout;
+
+	public Line(Cairo.Context cr, string text, Pango.FontDescription font_description) {
+		layout = Pango.cairo_create_layout(cr);
+		layout.set_text(text, -1);
+		layout.set_font_description(font_description);
+		layout.set_attributes(new Pango.AttrList());
+	}
+
+	public void set_foreground(uint start_index, uint end_index, uint32 color) {
+		var attribute = Pango.attr_foreground_new(
+			(uint16)(((color >> 16) & 0xFF) << 8),
+			(uint16)(((color >> 8) & 0xFF) << 8),
+			(uint16)((color & 0xFF) << 8)
+		);
+		attribute.start_index = start_index;
+		attribute.end_index = end_index;
+		layout.get_attributes().change((owned)attribute);
+	}
+
+	public void set_background(uint start_index, uint end_index, uint32 color) {
+		var attribute = Pango.attr_background_new(
+			(uint16)(((color >> 16) & 0xFF) << 8),
+			(uint16)(((color >> 8) & 0xFF) << 8),
+			(uint16)((color & 0xFF) << 8)
+		);
+		attribute.start_index = start_index;
+		attribute.end_index = end_index;
+		layout.get_attributes().change((owned)attribute);
+	}
+
+	public void set_weight(uint start_index, uint end_index, Pango.Weight weight) {
+		var attribute = Pango.attr_weight_new(weight);
+		attribute.start_index = start_index;
+		attribute.end_index = end_index;
+		layout.get_attributes().change((owned)attribute);
+	}
+
+	public void set_underline(uint start_index, uint end_index) {
+		var attribute = Pango.attr_underline_new(Pango.Underline.SINGLE);
+		attribute.start_index = start_index;
+		attribute.end_index = end_index;
+		layout.get_attributes().change((owned)attribute);
+	}
+
+	public void set_italic(uint start_index, uint end_index) {
+		var attribute = Pango.attr_style_new(Pango.Style.ITALIC);
+		attribute.start_index = start_index;
+		attribute.end_index = end_index;
+		layout.get_attributes().change((owned)attribute);
+	}
+
+	public void draw(Cairo.Context cr, double x, double y) {
+		cr.move_to(x, y);
+		Pango.cairo_show_layout_line(cr, layout.get_line_readonly(0));
+	}
+
+	public double index_to_x(int index) {
+		if (layout != null) {
+			int x_pos;
+			layout.get_line_readonly(0).index_to_x(index, false, out x_pos);
+			return x_pos / Pango.SCALE;
+		}
+		return 0.0;
+	}
+
+	public int x_to_index(double x) {
+		if (layout != null) {
+			int index, trailing;
+			layout.get_line_readonly(0).x_to_index((int)(x*Pango.SCALE), out index, out trailing);
+			return index + trailing;
+		}
+		return 0;
+	}
+}
+
 class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private File file;
 	private CoreConnection core_connection;
@@ -31,7 +108,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private double line_height;
 	private int total_lines;
 	private int first_line;
-	private Pango.Layout[] lines;
+	private Line[] lines;
 	private Position cursor_position;
 	private int blink_time;
 	private int blink_counter;
@@ -57,16 +134,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	// private helper methods
 	private void convert_xy(double x, double y, out int line, out int column) {
-		line = (int)((y - y_offset) / line_height);
-		var layout = lines[line];
-		if (layout != null) {
-			int trailing;
-			layout.get_line_readonly(0).x_to_index((int)(x*Pango.SCALE), out column, out trailing);
-			column += trailing;
-		} else {
-			column = 0;
-		}
-		line += first_line;
+		line = (int)((y - y_offset) / line_height) + first_line;
+		column = lines[line-first_line].x_to_index(x);
 	}
 
 	private void send_render_lines(int first_line, int last_line) {
@@ -164,11 +233,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		if (blink_counter % 2 == 0) {
 			int index = cursor_position.line - first_line;
 			if (index >= 0 && index < lines.length) {
-				int x_pos = 0;
-				var line = lines[index];
-				if (line != null) line.get_line_readonly(0).index_to_x(cursor_position.column, false, out x_pos);
+				double x = lines[index].index_to_x(cursor_position.column);
 				cr.set_source_rgb(0, 0, 0);
-				cr.rectangle(x_pos/Pango.SCALE, y_offset+index*line_height, 1, line_height);
+				cr.rectangle(x, y_offset+index*line_height, 1, line_height);
 				cr.fill();
 			}
 		}
@@ -287,17 +354,14 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		int start = int.max(this.first_line, first_line);
 		int end = int.min(this.first_line + this.lines.length, first_line + (int)lines.get_length());
 		for (int i = start; i < end; i++) {
-			var line = lines.get_array_element(i-first_line);
-			var text = line.get_string_element(0);
-			var layout = Pango.cairo_create_layout(cr);
-			layout.set_text(text, -1);
-			layout.set_font_description(font_description);
+			var line_json = lines.get_array_element(i-first_line);
+			var text = line_json.get_string_element(0);
+			var line = Line(cr, text, font_description);
 			cr.set_source_rgb(1, 1, 1);
 			cr.rectangle(0, (i-this.first_line)*line_height, surface.get_width()/get_scale_factor(), line_height);
 			cr.fill();
-			var attributes = new Pango.AttrList();
-			for (int j = 1; j < line.get_length(); j++) {
-				var annotation = line.get_array_element(j);
+			for (int j = 1; j < line_json.get_length(); j++) {
+				var annotation = line_json.get_array_element(j);
 				switch (annotation.get_string_element(0)) {
 					case "cursor":
 						int column = (int)annotation.get_int_element(1);
@@ -307,43 +371,28 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 						uint start_index = (uint)annotation.get_int_element(1);
 						uint end_index = (uint)annotation.get_int_element(2);
 						uint32 color = (uint32)annotation.get_int_element(3);
-						var attribute = Pango.attr_foreground_new((uint16)((color>>16)&0xFF)<<8, (uint16)((color>>8)&0xFF)<<8, (uint16)(color&0xFF)<<8);
-						attribute.start_index = start_index;
-						attribute.end_index = end_index;
-						attributes.change((owned)attribute);
+						line.set_foreground(start_index, end_index, color);
 						int font_style = (int)annotation.get_int_element(4);
 						if ((font_style & 1) != 0) {
-							attribute = Pango.attr_weight_new(Pango.Weight.BOLD);
-							attribute.start_index = start_index;
-							attribute.end_index = end_index;
-							attributes.change((owned)attribute);
+							line.set_weight(start_index, end_index, Pango.Weight.BOLD);
 						}
 						if ((font_style & 2) != 0) {
-							attribute = Pango.attr_underline_new(Pango.Underline.SINGLE);
-							attribute.start_index = start_index;
-							attribute.end_index = end_index;
-							attributes.change((owned)attribute);
+							line.set_underline(start_index, end_index);
 						}
 						if ((font_style & 4) != 0) {
-							attribute = Pango.attr_style_new(Pango.Style.ITALIC);
-							attribute.start_index = start_index;
-							attribute.end_index = end_index;
-							attributes.change((owned)attribute);
+							line.set_italic(start_index, end_index);
 						}
 						break;
 					case "sel":
-						var attribute = Pango.attr_background_new(0xCC<<8, 0xCC<<8, 0xCC<<8);
-						attribute.start_index = (uint)annotation.get_int_element(1);
-						attribute.end_index = (uint)annotation.get_int_element(2);
-						attributes.change((owned)attribute);
+						uint start_index = (uint)annotation.get_int_element(1);
+						uint end_index = (uint)annotation.get_int_element(2);
+						line.set_background(start_index, end_index, 0xCCCCCC);
 						break;
 				}
 			}
-			layout.set_attributes(attributes);
 			cr.set_source_rgb(0, 0, 0);
-			cr.move_to(0, (i-this.first_line)*line_height+ascent);
-			Pango.cairo_show_layout_line(cr, layout.get_line_readonly(0));
-			this.lines[i-this.first_line] = layout;
+			line.draw(cr, 0, (i-this.first_line)*line_height+ascent);
+			this.lines[i-this.first_line] = line;
 		}
 		queue_draw();
 	}
