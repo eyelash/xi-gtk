@@ -22,8 +22,8 @@ struct Position {
 struct Line {
 	Pango.Layout layout;
 
-	public Line(Cairo.Context cr, string text, Pango.FontDescription font_description) {
-		layout = Pango.cairo_create_layout(cr);
+	public Line(Pango.Context context, string text, Pango.FontDescription font_description) {
+		layout = new Pango.Layout(context);
 		layout.set_text(text, -1);
 		layout.set_font_description(font_description);
 		layout.set_attributes(new Pango.AttrList());
@@ -73,26 +73,23 @@ struct Line {
 	}
 
 	public void draw(Cairo.Context cr, double x, double y) {
+		if (layout == null) return;
 		cr.move_to(x, y);
 		Pango.cairo_show_layout_line(cr, layout.get_line_readonly(0));
 	}
 
 	public double index_to_x(int index) {
-		if (layout != null) {
-			int x_pos;
-			layout.get_line_readonly(0).index_to_x(index, false, out x_pos);
-			return x_pos / Pango.SCALE;
-		}
-		return 0.0;
+		if (layout == null) return 0.0;
+		int x_pos;
+		layout.get_line_readonly(0).index_to_x(index, false, out x_pos);
+		return x_pos / Pango.SCALE;
 	}
 
 	public int x_to_index(double x) {
-		if (layout != null) {
-			int index, trailing;
-			layout.get_line_readonly(0).x_to_index((int)(x*Pango.SCALE), out index, out trailing);
-			return index + trailing;
-		}
-		return 0;
+		if (layout == null) return 0;
+		int index, trailing;
+		layout.get_line_readonly(0).x_to_index((int)(x*Pango.SCALE), out index, out trailing);
+		return index + trailing;
 	}
 }
 
@@ -100,8 +97,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private File file;
 	private CoreConnection core_connection;
 	private Gtk.IMContext im_context;
-	private Cairo.ImageSurface surface;
-	private Cairo.Context cr;
 	private double y_offset;
 	private Pango.FontDescription font_description;
 	private double ascent;
@@ -141,6 +136,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private void send_render_lines(int first_line, int last_line) {
 		first_line = int.max(first_line, this.first_line);
 		last_line = int.min(last_line, this.first_line + lines.length);
+		if (first_line == last_line) return;
 		core_connection.send_render_lines(tab, first_line, last_line, (result) => {
 			update_lines(first_line, result.get_array());
 		});
@@ -185,34 +181,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		if (lines_length != previous_lines_length) {
 			lines.resize(lines_length);
 			core_connection.send_scroll(tab, first_line, first_line+lines.length);
-		}
-		int surface_height = (int)(lines.length*line_height) + 1;
-		if (surface == null) {
-			// create a new surface and request all visible lines
-			surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width*get_scale_factor(), surface_height*get_scale_factor(), 0);
-			cr = new Cairo.Context(surface);
-			cr.set_source_rgb(1, 1, 1);
-			cr.paint();
-			send_render_lines(first_line, first_line+lines.length);
-		} else if (allocation.width > surface.get_width()/get_scale_factor()) {
-			// create a new surface, draw the current surface to the new surface and request all visible lines
-			var new_surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width*get_scale_factor(), surface_height*get_scale_factor(), 0);
-			cr = new Cairo.Context(new_surface);
-			cr.set_source_rgb(1, 1, 1);
-			cr.paint();
-			cr.set_source_surface(surface, 0, 0);
-			cr.paint();
-			surface = new_surface;
-			send_render_lines(first_line, first_line+lines.length);
-		} else if (allocation.width != surface.get_width()/get_scale_factor() || surface_height != surface.get_height()/get_scale_factor()) {
-			// create a new surface, draw the current surface to the new surface and request only the newly visible lines
-			var new_surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, allocation.width*get_scale_factor(), surface_height*get_scale_factor(), 0);
-			cr = new Cairo.Context(new_surface);
-			cr.set_source_rgb(1, 1, 1);
-			cr.paint();
-			cr.set_source_surface(surface, 0, 0);
-			cr.paint();
-			surface = new_surface;
 			if (lines_length > previous_lines_length) {
 				send_render_lines(first_line+previous_lines_length, first_line+lines.length);
 			}
@@ -227,8 +195,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	public override bool draw(Cairo.Context cr) {
 		// draw the lines
-		cr.set_source_surface(surface, 0, y_offset);
-		cr.paint();
+		for (int i = 0; i < lines.length; i++) {
+			lines[i].draw(cr, 0, y_offset + i * line_height + ascent);
+		}
 		// draw the cursors
 		if (blink_counter % 2 == 0) {
 			int index = cursor_position.line - first_line;
@@ -314,8 +283,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			for (int i = diff; i < lines.length; i++) {
 				lines[i-diff] = lines[i];
 			}
-			cr.set_source_surface(surface, 0, -diff*line_height);
-			cr.paint();
 			send_render_lines(previous_first_line+lines.length, first_line+lines.length);
 			core_connection.send_scroll(tab, first_line, first_line+lines.length);
 		} else if (first_line < previous_first_line) {
@@ -323,13 +290,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			for (int i = lines.length-diff-1; i >= 0; i--) {
 				lines[i+diff] = lines[i];
 			}
-			var new_surface = (Cairo.ImageSurface)get_window().create_similar_image_surface(Cairo.Format.RGB24, surface.get_width(), surface.get_height(), 0);
-			cr = new Cairo.Context(new_surface);
-			cr.set_source_rgb(1, 1, 1);
-			cr.paint();
-			cr.set_source_surface(surface, 0, diff*line_height);
-			cr.paint();
-			surface = new_surface;
 			send_render_lines(first_line, previous_first_line);
 			core_connection.send_scroll(tab, first_line, first_line+lines.length);
 		}
@@ -356,10 +316,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		for (int i = start; i < end; i++) {
 			var line_json = lines.get_array_element(i-first_line);
 			var text = line_json.get_string_element(0);
-			var line = Line(cr, text, font_description);
-			cr.set_source_rgb(1, 1, 1);
-			cr.rectangle(0, (i-this.first_line)*line_height, surface.get_width()/get_scale_factor(), line_height);
-			cr.fill();
+			var line = Line(get_pango_context(), text, font_description);
 			for (int j = 1; j < line_json.get_length(); j++) {
 				var annotation = line_json.get_array_element(j);
 				switch (annotation.get_string_element(0)) {
@@ -390,8 +347,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 						break;
 				}
 			}
-			cr.set_source_rgb(0, 0, 0);
-			line.draw(cr, 0, (i-this.first_line)*line_height+ascent);
 			this.lines[i-this.first_line] = line;
 		}
 		queue_draw();
@@ -403,7 +358,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			total_lines = (int)update.get_int_member("height");
 			_vadjustment.upper = total_lines * line_height;
 		}
-		if (surface == null) return;
 		int first_line = (int)update.get_int_member("first_line");
 		update_lines(first_line, update.get_array_member("lines"));
 		blink_start();
