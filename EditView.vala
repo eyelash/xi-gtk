@@ -186,6 +186,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			}
 		}
 		_vadjustment.page_size = allocation.height;
+		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
+			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
+		}
 	}
 
 	public override void get_preferred_height(out int minimum_height, out int natural_height) {
