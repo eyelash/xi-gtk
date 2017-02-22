@@ -1,4 +1,4 @@
-// Copyright 2016 Elias Aebi
+// Copyright 2016-2017 Elias Aebi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -184,6 +184,13 @@ class CoreConnection {
 		params.set_int_member("first_line", first_line);
 		params.set_int_member("last_line", last_line);
 		send_edit_request(tab, "render_lines", params, new ResponseHandler((owned)response_handler));
+	}
+
+	public void send_request_lines(string tab, int64 first_line, int64 last_line) {
+		var params = new Json.Array();
+		params.add_int_element(first_line);
+		params.add_int_element(last_line);
+		send_edit_array(tab, "request_lines", params);
 	}
 
 	private static DataInputStream create_input_stream(int fd, owned PollableSourceFunc func) {

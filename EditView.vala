@@ -1,4 +1,4 @@
-// Copyright 2016 Elias Aebi
+// Copyright 2016-2017 Elias Aebi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,13 +14,9 @@
 
 namespace Xi {
 
-struct Position {
-	public int line;
-	public int column;
-}
-
-struct Line {
-	Pango.Layout layout;
+class Line {
+	private Pango.Layout layout;
+	private double[] cursors;
 
 	public Line(Pango.Context context, string text, Pango.FontDescription font_description) {
 		layout = new Pango.Layout(context);
@@ -29,26 +25,33 @@ struct Line {
 		layout.set_attributes(new Pango.AttrList());
 	}
 
-	public void set_foreground(uint start_index, uint end_index, uint32 color) {
-		var attribute = Pango.attr_foreground_new(
-			(uint16)(((color >> 16) & 0xFF) << 8),
-			(uint16)(((color >> 8) & 0xFF) << 8),
-			(uint16)((color & 0xFF) << 8)
-		);
-		attribute.start_index = start_index;
-		attribute.end_index = end_index;
-		layout.get_attributes().change((owned)attribute);
+	public void set_cursors(Json.Array json_cursors) {
+		cursors.resize((int)json_cursors.get_length());
+		for (uint i = 0; i < json_cursors.get_length(); i++) {
+			cursors[i] = index_to_x((int)json_cursors.get_int_element(i));
+		}
 	}
 
-	public void set_background(uint start_index, uint end_index, uint32 color) {
-		var attribute = Pango.attr_background_new(
-			(uint16)(((color >> 16) & 0xFF) << 8),
-			(uint16)(((color >> 8) & 0xFF) << 8),
-			(uint16)((color & 0xFF) << 8)
-		);
+	public void set_foreground(uint start_index, uint end_index, Gdk.RGBA color) {
+		var attribute = Pango.attr_foreground_new((uint16)(color.red*uint16.MAX), (uint16)(color.green*uint16.MAX), (uint16)(color.blue*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
 		layout.get_attributes().change((owned)attribute);
+		/*attribute = Pango.attr_foreground_alpha_new((uint16)(color.alpha*uint16.MAX));
+		attribute.start_index = start_index;
+		attribute.end_index = end_index;
+		layout.get_attributes().change((owned)attribute);*/
+	}
+
+	public void set_background(uint start_index, uint end_index, Gdk.RGBA color) {
+		var attribute = Pango.attr_background_new((uint16)(color.red*uint16.MAX), (uint16)(color.green*uint16.MAX), (uint16)(color.blue*uint16.MAX));
+		attribute.start_index = start_index;
+		attribute.end_index = end_index;
+		layout.get_attributes().change((owned)attribute);
+		/*attribute = Pango.attr_background_alpha_new((uint16)(color.alpha*uint16.MAX));
+		attribute.start_index = start_index;
+		attribute.end_index = end_index;
+		layout.get_attributes().change((owned)attribute);*/
 	}
 
 	public void set_weight(uint start_index, uint end_index, Pango.Weight weight) {
@@ -72,24 +75,133 @@ struct Line {
 		layout.get_attributes().change((owned)attribute);
 	}
 
-	public void draw(Cairo.Context cr, double x, double y) {
-		if (layout == null) return;
-		cr.move_to(x, y);
+	public void draw(Cairo.Context cr, double y, double width, double ascent, double line_height, bool draw_cursors) {
+		cr.move_to(0, y + ascent);
 		Pango.cairo_show_layout_line(cr, layout.get_line_readonly(0));
+		if (draw_cursors) {
+			foreach (double cursor in cursors) {
+				cr.rectangle(cursor, y, 1, line_height);
+				cr.fill();
+			}
+		}
 	}
 
 	public double index_to_x(int index) {
-		if (layout == null) return 0.0;
 		int x_pos;
 		layout.get_line_readonly(0).index_to_x(index, false, out x_pos);
-		return x_pos / Pango.SCALE;
+		return Pango.units_to_double(x_pos);
 	}
 
 	public int x_to_index(double x) {
-		if (layout == null) return 0;
 		int index, trailing;
-		layout.get_line_readonly(0).x_to_index((int)(x*Pango.SCALE), out index, out trailing);
+		layout.get_line_readonly(0).x_to_index(Pango.units_from_double(x), out index, out trailing);
 		return index + trailing;
+	}
+}
+
+class LinesCache {
+	private GenericArray<Line?> lines;
+	private int invalid_before;
+	private int invalid_after;
+	private Pango.Context context;
+	private Pango.FontDescription font_description;
+
+	public LinesCache(Pango.Context context, Pango.FontDescription font_description) {
+		this.lines = new GenericArray<Line?>();
+		this.context = context;
+		this.font_description = font_description;
+	}
+
+	private static void add_invalid(GenericArray<Line?> lines, ref int invalid_before, ref int invalid_after, int n) {
+		if (lines.length == 0) {
+			invalid_before += n;
+		} else {
+			invalid_after += n;
+		}
+	}
+
+	private static void add_line(GenericArray<Line?> lines, ref int invalid_before, ref int invalid_after, Line? line) {
+		if (line != null) {
+			for (int i = 0; i < invalid_after; i++) {
+				lines.add(null);
+			}
+			invalid_after = 0;
+			lines.add(line);
+		} else {
+			add_invalid(lines, ref invalid_before, ref invalid_after, 1);
+		}
+	}
+
+	public void update(Json.Object update) {
+		var ops = update.get_array_member("ops");
+		var new_lines = new GenericArray<Line?>();
+		int new_invalid_before = 0;
+		int new_invalid_after = 0;
+		int index = 0;
+		for (int i = 0; i < ops.get_length(); i++) {
+			var op = ops.get_object_element(i);
+			switch (op.get_string_member("op")) {
+				case "copy":
+					stdout.printf("op: copy\n");
+					int n = (int)op.get_int_member("n");
+					if (index < invalid_before) {
+						int invalid = int.min(n, invalid_before - index);
+						add_invalid(new_lines, ref new_invalid_before, ref new_invalid_after, invalid);
+						n -= invalid;
+						index += invalid;
+					}
+					while (n > 0 && index < invalid_before + lines.length) {
+						add_line(new_lines, ref new_invalid_before, ref new_invalid_after, lines[index-invalid_before]);
+						n--;
+						index++;
+					}
+					add_invalid(new_lines, ref new_invalid_before, ref new_invalid_after, n);
+					index += n;
+					break;
+				case "skip":
+					stdout.printf("op: skip\n");
+					int n = (int)op.get_int_member("n");
+					index += n;
+					break;
+				case "invalidate":
+					stdout.printf("op: invalidate\n");
+					int n = (int)op.get_int_member("n");
+					add_invalid(new_lines, ref new_invalid_before, ref new_invalid_after, n);
+					break;
+				case "ins":
+					stdout.printf("op: ins\n");
+					var json_lines = op.get_array_member("lines");
+					for (int j = 0; j < json_lines.get_length(); j++) {
+						var json_line = json_lines.get_object_element(j);
+						var text = json_line.get_string_member("text");
+						var line = new Line(context, text, font_description);
+						if (json_line.has_member("cursor")) {
+							line.set_cursors(json_line.get_array_member("cursor"));
+						}
+						add_line(new_lines, ref new_invalid_before, ref new_invalid_after, line);
+					}
+					break;
+				case "update":
+					stdout.printf("op: update\n");
+					var json_lines = op.get_array_member("lines");
+					// TODO: implement
+					break;
+			}
+		}
+		lines = new_lines;
+		invalid_before = new_invalid_before;
+		invalid_after = new_invalid_after;
+	}
+
+	public int get_height() {
+		return invalid_before + lines.length + invalid_after;
+	}
+
+	public Line? get_line(int index) {
+		if (index < invalid_before || index >= invalid_before + lines.length) {
+			return null;
+		}
+		return lines[index - invalid_before];
 	}
 }
 
@@ -97,14 +209,14 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private File file;
 	private CoreConnection core_connection;
 	private Gtk.IMContext im_context;
-	private double y_offset;
-	private Pango.FontDescription font_description;
 	private double ascent;
 	private double line_height;
+
+	private double y_offset;
+	private LinesCache lines_cache;
 	private int total_lines;
 	private int first_line;
-	private Line[] lines;
-	private Position cursor_position;
+	private int visible_lines;
 	private int blink_time;
 	private int blink_counter;
 	private TimeoutSource blink_source;
@@ -130,16 +242,15 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	// private helper methods
 	private void convert_xy(double x, double y, out int line, out int column) {
 		line = (int)((y - y_offset) / line_height) + first_line;
-		column = lines[line-first_line].x_to_index(x);
+		var _line = lines_cache.get_line(line);
+		column = _line != null ? _line.x_to_index(x) : 0;
 	}
 
-	private void send_render_lines(int first_line, int last_line) {
+	private void send_request_lines(int first_line, int last_line) {
 		first_line = int.max(first_line, this.first_line);
-		last_line = int.min(last_line, this.first_line + lines.length);
+		last_line = int.min(last_line, this.first_line + visible_lines);
 		if (first_line == last_line) return;
-		core_connection.send_render_lines(tab, first_line, last_line, (result) => {
-			update_lines(first_line, result.get_array());
-		});
+		core_connection.send_request_lines(tab, first_line, last_line);
 	}
 
 	public EditView(string tab, File? file, CoreConnection core_connection) {
@@ -149,10 +260,11 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		im_context = new Gtk.IMMulticontext();
 		im_context.commit.connect(handle_commit);
 		var settings = new Settings("org.gnome.desktop.interface");
-		font_description = Pango.FontDescription.from_string(settings.get_string("monospace-font-name"));
+		var font_description = Pango.FontDescription.from_string(settings.get_string("monospace-font-name"));
 		var metrics = get_pango_context().get_metrics(font_description, null);
-		ascent = metrics.get_ascent() / Pango.SCALE;
-		line_height = ascent + metrics.get_descent() / Pango.SCALE;
+		ascent = Pango.units_to_double(metrics.get_ascent());
+		line_height = ascent + Pango.units_to_double(metrics.get_descent());
+		lines_cache = new LinesCache(get_pango_context(), font_description);
 		blink_time = settings.get_int("cursor-blink-time") / 2;
 		can_focus = true;
 		set_has_window(true);
@@ -176,13 +288,12 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	public override void size_allocate(Gtk.Allocation allocation) {
 		base.size_allocate(allocation);
-		int lines_length = (int)(allocation.height / line_height) + 2;
-		int previous_lines_length = lines.length;
-		if (lines_length != previous_lines_length) {
-			lines.resize(lines_length);
-			core_connection.send_scroll(tab, first_line, first_line+lines.length);
-			if (lines_length > previous_lines_length) {
-				send_render_lines(first_line+previous_lines_length, first_line+lines.length);
+		int previous_visible_lines = visible_lines;
+		visible_lines = (int)(allocation.height / line_height) + 2;
+		if (visible_lines != previous_visible_lines) {
+			core_connection.send_scroll(tab, first_line, first_line + visible_lines);
+			if (visible_lines > previous_visible_lines) {
+				send_request_lines(first_line + previous_visible_lines, first_line + visible_lines);
 			}
 		}
 		_vadjustment.page_size = allocation.height;
@@ -197,18 +308,10 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public override bool draw(Cairo.Context cr) {
-		// draw the lines
-		for (int i = 0; i < lines.length; i++) {
-			lines[i].draw(cr, 0, y_offset + i * line_height + ascent);
-		}
-		// draw the cursors
-		if (blink_counter % 2 == 0) {
-			int index = cursor_position.line - first_line;
-			if (index >= 0 && index < lines.length) {
-				double x = lines[index].index_to_x(cursor_position.column);
-				cr.set_source_rgb(0, 0, 0);
-				cr.rectangle(x, y_offset+index*line_height, 1, line_height);
-				cr.fill();
+		for (int i = first_line; i < first_line + visible_lines; i++) {
+			var line = lines_cache.get_line(i);
+			if (line != null) {
+				line.draw(cr, y_offset + (i - first_line) * line_height, get_allocated_width(), ascent, line_height, blink_counter % 2 == 0);
 			}
 		}
 		return Gdk.EVENT_STOP;
@@ -282,19 +385,11 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		int previous_first_line = first_line;
 		first_line = (int)(value / line_height);
 		if (first_line > previous_first_line) {
-			int diff = first_line - previous_first_line;
-			for (int i = diff; i < lines.length; i++) {
-				lines[i-diff] = lines[i];
-			}
-			send_render_lines(previous_first_line+lines.length, first_line+lines.length);
-			core_connection.send_scroll(tab, first_line, first_line+lines.length);
+			send_request_lines(previous_first_line + visible_lines, first_line + visible_lines);
+			core_connection.send_scroll(tab, first_line, first_line + visible_lines);
 		} else if (first_line < previous_first_line) {
-			int diff = previous_first_line - first_line;
-			for (int i = lines.length-diff-1; i >= 0; i--) {
-				lines[i+diff] = lines[i];
-			}
-			send_render_lines(first_line, previous_first_line);
-			core_connection.send_scroll(tab, first_line, first_line+lines.length);
+			send_request_lines(first_line, previous_first_line);
+			core_connection.send_scroll(tab, first_line, first_line + visible_lines);
 		}
 		y_offset = Math.round(first_line*line_height - value);
 		queue_draw();
@@ -313,58 +408,16 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		blink_source.attach(null);
 	}
 
-	private void update_lines(int first_line, Json.Array lines) {
-		int start = int.max(this.first_line, first_line);
-		int end = int.min(this.first_line + this.lines.length, first_line + (int)lines.get_length());
-		for (int i = start; i < end; i++) {
-			var line_json = lines.get_array_element(i-first_line);
-			var text = line_json.get_string_element(0);
-			var line = Line(get_pango_context(), text, font_description);
-			for (int j = 1; j < line_json.get_length(); j++) {
-				var annotation = line_json.get_array_element(j);
-				switch (annotation.get_string_element(0)) {
-					case "cursor":
-						int column = (int)annotation.get_int_element(1);
-						cursor_position = {i, column};
-						break;
-					case "fg":
-						uint start_index = (uint)annotation.get_int_element(1);
-						uint end_index = (uint)annotation.get_int_element(2);
-						uint32 color = (uint32)annotation.get_int_element(3);
-						line.set_foreground(start_index, end_index, color);
-						int font_style = (int)annotation.get_int_element(4);
-						if ((font_style & 1) != 0) {
-							line.set_weight(start_index, end_index, Pango.Weight.BOLD);
-						}
-						if ((font_style & 2) != 0) {
-							line.set_underline(start_index, end_index);
-						}
-						if ((font_style & 4) != 0) {
-							line.set_italic(start_index, end_index);
-						}
-						break;
-					case "sel":
-						uint start_index = (uint)annotation.get_int_element(1);
-						uint end_index = (uint)annotation.get_int_element(2);
-						line.set_background(start_index, end_index, 0xCCCCCC);
-						break;
-				}
-			}
-			this.lines[i-this.first_line] = line;
-		}
-		queue_draw();
-	}
-
 	// public interface
 	public void update(Json.Object update) {
-		if (update.has_member("height")) {
-			total_lines = (int)update.get_int_member("height");
-			_vadjustment.upper = total_lines * line_height;
+		lines_cache.update(update);
+		_vadjustment.upper = lines_cache.get_height() * line_height;
+		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
+			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
 		}
-		int first_line = (int)update.get_int_member("first_line");
-		update_lines(first_line, update.get_array_member("lines"));
 		blink_start();
-		if (update.has_member("scrollto")) {
+		queue_draw();
+		/*if (update.has_member("scrollto")) {
 			var scrollto_line = update.get_array_member("scrollto").get_int_element(0);
 			if (scrollto_line * line_height < this.first_line * line_height - y_offset) {
 				_vadjustment.value = scrollto_line * line_height;
@@ -372,7 +425,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			else if ((scrollto_line + 1) * line_height > this.first_line * line_height - y_offset + get_allocated_height()) {
 				_vadjustment.value = (scrollto_line + 1) * line_height - get_allocated_height();
 			}
-		}
+		}*/
 	}
 
 	public void save() {
