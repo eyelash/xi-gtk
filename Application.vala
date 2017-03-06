@@ -1,4 +1,4 @@
-// Copyright 2016 Elias Aebi
+// Copyright 2016-2017 Elias Aebi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,22 +39,18 @@ class TabLabel: Gtk.Box {
 }
 
 class Notebook: Gtk.Notebook {
-	private HashTable<string, EditView> tabs;
 
 	public Notebook() {
-		tabs = new HashTable<string, EditView>(str_hash, str_equal);
 		set_scrollable(true);
 	}
 
 	public void add_edit_view(EditView edit_view) {
-		tabs[edit_view.tab] = edit_view;
 		var scrolled_window = new Gtk.ScrolledWindow(null, null);
 		scrolled_window.add(edit_view);
 		var label = new TabLabel(edit_view);
 		label.close_clicked.connect((edit_view) => {
 			int index = page_num(edit_view.get_parent());
 			remove_page(index);
-			tabs.remove(edit_view.tab);
 		});
 		append_page(scrolled_window, label);
 		set_tab_reorderable(scrolled_window, true);
@@ -62,11 +58,6 @@ class Notebook: Gtk.Notebook {
 		show_all();
 		set_current_page(page_num(scrolled_window));
 		edit_view.grab_focus();
-	}
-
-	public void update(string tab, Json.Object update) {
-		var edit_view = tabs[tab];
-		edit_view.update(update);
 	}
 
 	public unowned EditView get_current_edit_view() {
@@ -112,6 +103,9 @@ class Application: Gtk.Application {
 		}
 
 		core_connection = new CoreConnection({core_binary});
+		core_connection.def_style_received.connect((style) => {
+			StyleMap.get_instance().def_style(style);
+		});
 		window = new Gtk.ApplicationWindow(this);
 		window.set_default_size(600, 400);
 		add_accelerator("new", "<Control>N", () => add_new_tab());
@@ -128,7 +122,6 @@ class Application: Gtk.Application {
 		add_accelerator("save", "<Control>S", () => notebook.get_current_edit_view().save());
 		add_accelerator("save-as", "<Control><Shift>S", () => notebook.get_current_edit_view().save_as());
 		notebook = new Notebook();
-		core_connection.update_received.connect(notebook.update);
 		window.add(notebook);
 		window.show_all();
 	}

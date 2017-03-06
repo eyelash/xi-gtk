@@ -32,12 +32,8 @@ class CoreConnection {
 	private HashTable<int, ResponseHandler> response_handlers;
 
 	public signal void update_received(string tab, Json.Object update);
-
-	private void handle_update(Json.Object params) {
-		var tab = params.get_string_member("tab");
-		var update = params.get_object_member("update");
-		update_received(tab, update);
-	}
+	public signal void scroll_to_received(string tab, int line, int col);
+	public signal void def_style_received(Json.Object params);
 
 	private bool receive() {
 		try {
@@ -58,10 +54,22 @@ class CoreConnection {
 					}
 				} else {
 					var method = root.get_string_member("method");
-					var params = root.get_member("params");
+					var params = root.get_object_member("params");
 					switch (method) {
 						case "update":
-							handle_update(params.get_object());
+							var tab = params.get_string_member("tab");
+							var update = params.get_object_member("update");
+							update_received(tab, update);
+							break;
+						case "scroll_to":
+							var tab = params.get_string_member("tab");
+							var scroll_to_line = (int)params.get_int_member("line");
+							var scroll_to_col = (int)params.get_int_member("col");
+							scroll_to_received(tab, scroll_to_line, scroll_to_col);
+							break;
+						case "def_style":
+							var id = params.get_int_member("id");
+							def_style_received(params);
 							break;
 					}
 				}

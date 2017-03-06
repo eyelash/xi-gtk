@@ -14,6 +14,79 @@
 
 namespace Xi {
 
+struct Style {
+	Gdk.RGBA? foreground;
+	Gdk.RGBA? background;
+	Pango.Weight? weight;
+	bool italic;
+}
+
+class StyleMap {
+	private static StyleMap instance;
+	private GenericArray<Style?> map;
+
+	public static StyleMap get_instance() {
+		if (instance == null) {
+			instance = new StyleMap();
+		}
+		return instance;
+	}
+
+	public StyleMap() {
+		map = new GenericArray<Style?>();
+		// style id 0: selection
+		map.add(Style() {
+			background = {0.8, 0.8, 0.8, 1.0}
+		});
+	}
+
+	private static Gdk.RGBA convert_color(uint32 color) {
+		return Gdk.RGBA() {
+			red = ((color >> 16) & 0xFF) / 255.0,
+			green = ((color >> 8) & 0xFF) / 255.0,
+			blue = (color & 0xFF) / 255.0,
+			alpha = ((color >> 24) & 0xFF) / 255.0
+		};
+	}
+
+	private static Pango.Weight convert_weight(int weight) {
+		switch (weight) {
+			case 400: return Pango.Weight.NORMAL;
+			case 700: return Pango.Weight.BOLD;
+			default: return Pango.Weight.NORMAL;
+		}
+	}
+
+	public void def_style(Json.Object json_style) {
+		int id = (int)json_style.get_int_member("id");
+		Style style = Style();
+		if (json_style.has_member("fg_color")) {
+			style.foreground = convert_color((uint32)json_style.get_int_member("fg_color"));
+		}
+		if (json_style.has_member("bg_color")) {
+			style.background = convert_color((uint32)json_style.get_int_member("bg_color"));
+		}
+		if (json_style.has_member("weight")) {
+			style.weight = convert_weight((int)json_style.get_int_member("weight"));
+		}
+		if (json_style.has_member("italic")) {
+			style.italic = json_style.get_boolean_member("italic");
+		}
+		if (id < map.length) {
+			map[id] = style;
+		} else {
+			for (int i = map.length; i < id; i++) {
+				map.add(null);
+			}
+			map.add(style);
+		}
+	}
+
+	public Style get_style(int id) {
+		return map[id];
+	}
+}
+
 class Line {
 	private Pango.Layout layout;
 	private double[] cursors;
@@ -32,47 +105,84 @@ class Line {
 		}
 	}
 
+	public void set_style(uint start_index, uint end_index, Style style) {
+		if (style.foreground != null) {
+			set_foreground(start_index, end_index, style.foreground);
+		}
+		if (style.background != null) {
+			set_background(start_index, end_index, style.background);
+		}
+		if (style.weight != null) {
+			set_weight(start_index, end_index, style.weight);
+		}
+		if (style.italic) {
+			set_italic(start_index, end_index);
+		}
+	}
+
+	public void set_styles(Json.Array styles) {
+		uint offset = 0;
+		for (int i = 0; i < styles.get_length(); i += 3) {
+			uint start = offset + (uint)styles.get_int_element(i);
+			uint end = start + (uint)styles.get_int_element(i+1);
+			int style_id = (int)styles.get_int_element(i+2);
+			Style style = StyleMap.get_instance().get_style(style_id);
+			set_style(start, end, style);
+			offset = end;
+		}
+	}
+
 	public void set_foreground(uint start_index, uint end_index, Gdk.RGBA color) {
+		var attributes = layout.get_attributes();
 		var attribute = Pango.attr_foreground_new((uint16)(color.red*uint16.MAX), (uint16)(color.green*uint16.MAX), (uint16)(color.blue*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		layout.get_attributes().change((owned)attribute);
+		attributes.change((owned)attribute);
 		/*attribute = Pango.attr_foreground_alpha_new((uint16)(color.alpha*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		layout.get_attributes().change((owned)attribute);*/
+		attributes.change((owned)attribute);*/
+		layout.set_attributes(attributes);
 	}
 
 	public void set_background(uint start_index, uint end_index, Gdk.RGBA color) {
+		var attributes = layout.get_attributes();
 		var attribute = Pango.attr_background_new((uint16)(color.red*uint16.MAX), (uint16)(color.green*uint16.MAX), (uint16)(color.blue*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		layout.get_attributes().change((owned)attribute);
+		attributes.change((owned)attribute);
 		/*attribute = Pango.attr_background_alpha_new((uint16)(color.alpha*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		layout.get_attributes().change((owned)attribute);*/
+		attributes.change((owned)attribute);*/
+		layout.set_attributes(attributes);
 	}
 
 	public void set_weight(uint start_index, uint end_index, Pango.Weight weight) {
+		var attributes = layout.get_attributes();
 		var attribute = Pango.attr_weight_new(weight);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		layout.get_attributes().change((owned)attribute);
+		attributes.change((owned)attribute);
+		layout.set_attributes(attributes);
 	}
 
 	public void set_underline(uint start_index, uint end_index) {
+		var attributes = layout.get_attributes();
 		var attribute = Pango.attr_underline_new(Pango.Underline.SINGLE);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		layout.get_attributes().change((owned)attribute);
+		attributes.change((owned)attribute);
+		layout.set_attributes(attributes);
 	}
 
 	public void set_italic(uint start_index, uint end_index) {
+		var attributes = layout.get_attributes();
 		var attribute = Pango.attr_style_new(Pango.Style.ITALIC);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		layout.get_attributes().change((owned)attribute);
+		attributes.change((owned)attribute);
+		layout.set_attributes(attributes);
 	}
 
 	public void draw(Cairo.Context cr, double y, double width, double ascent, double line_height, bool draw_cursors) {
@@ -178,6 +288,9 @@ class LinesCache {
 						if (json_line.has_member("cursor")) {
 							line.set_cursors(json_line.get_array_member("cursor"));
 						}
+						if (json_line.has_member("styles")) {
+							line.set_styles(json_line.get_array_member("styles"));
+						}
 						add_line(new_lines, ref new_invalid_before, ref new_invalid_after, line);
 					}
 					break;
@@ -257,6 +370,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		this.tab = tab;
 		this.file = file;
 		this.core_connection = core_connection;
+		core_connection.update_received.connect(update);
+		core_connection.scroll_to_received.connect(scroll_to);
 		im_context = new Gtk.IMMulticontext();
 		im_context.commit.connect(handle_commit);
 		var settings = new Settings("org.gnome.desktop.interface");
@@ -409,7 +524,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	// public interface
-	public void update(Json.Object update) {
+	public void update(string tab, Json.Object update) {
+		if (tab != this.tab) return;
 		lines_cache.update(update);
 		_vadjustment.upper = lines_cache.get_height() * line_height;
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
@@ -417,15 +533,15 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 		blink_start();
 		queue_draw();
-		/*if (update.has_member("scrollto")) {
-			var scrollto_line = update.get_array_member("scrollto").get_int_element(0);
-			if (scrollto_line * line_height < this.first_line * line_height - y_offset) {
-				_vadjustment.value = scrollto_line * line_height;
-			}
-			else if ((scrollto_line + 1) * line_height > this.first_line * line_height - y_offset + get_allocated_height()) {
-				_vadjustment.value = (scrollto_line + 1) * line_height - get_allocated_height();
-			}
-		}*/
+	}
+
+	public void scroll_to(string tab, int line, int col) {
+		if (tab != this.tab) return;
+		if (line * line_height < first_line * line_height - y_offset) {
+			_vadjustment.value = line * line_height;
+		} else if ((line + 1) * line_height > first_line * line_height - y_offset + get_allocated_height()) {
+			_vadjustment.value = (line + 1) * line_height - get_allocated_height();
+		}
 	}
 
 	public void save() {
