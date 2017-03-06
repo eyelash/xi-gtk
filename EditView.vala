@@ -561,6 +561,13 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 		dialog.destroy();
 	}
+
+	public void undo() {
+		core_connection.send_edit(tab, "undo");
+	}
+	public void redo() {
+		core_connection.send_edit(tab, "redo");
+	}
 }
 
 }

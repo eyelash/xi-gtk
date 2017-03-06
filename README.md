@@ -44,13 +44,16 @@ Shortcut                                         | Command
 <kbd>Control</kbd>+<kbd>O</kbd>                  | Open File
 <kbd>Control</kbd>+<kbd>S</kbd>                  | Save
 <kbd>Control</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | Save As
+<kbd>Control</kbd>+<kbd>Z</kbd>                  | Undo
+<kbd>Control</kbd>+<kbd>Y</kbd>                  | Redo
 
 ## To Do
 
 - [x] mouse input and selections
 - [x] saving
 - [x] follow the cursor (respect the `scrollto` parameter)
-- [ ] undo / redo
+- [x] undo / redo
+- [ ] line numbers
 - [ ] copy / paste
 - [ ] i18n
 - [ ] preferences (font family, font size, etc.)
