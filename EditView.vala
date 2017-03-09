@@ -482,7 +482,17 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public override bool button_press_event(Gdk.EventButton event) {
 		int line, column;
 		convert_xy(event.x, event.y, out line, out column);
-		core_connection.send_click(tab, line, column, 0, 1);
+		switch (event.type) {
+			case Gdk.EventType.BUTTON_PRESS:
+				core_connection.send_click(tab, line, column, 0, 1);
+				break;
+			case Gdk.EventType.2BUTTON_PRESS:
+				core_connection.send_click(tab, line, column, 0, 2);
+				break;
+			case Gdk.EventType.3BUTTON_PRESS:
+				core_connection.send_click(tab, line, column, 0, 3);
+				break;
+		}
 		return Gdk.EVENT_STOP;
 	}
 	public override bool button_release_event(Gdk.EventButton event) {
