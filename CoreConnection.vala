@@ -68,7 +68,6 @@ class CoreConnection {
 							scroll_to_received(tab, scroll_to_line, scroll_to_col);
 							break;
 						case "def_style":
-							var id = params.get_int_member("id");
 							def_style_received(params);
 							break;
 					}
@@ -185,13 +184,6 @@ class CoreConnection {
 		params.add_int_element(column);
 		params.add_int_element(modifiers);
 		send_edit_array(tab, "drag", params);
-	}
-
-	public void send_render_lines(string tab, int64 first_line, int64 last_line, owned ResponseHandler.Delegate response_handler) {
-		var params = new Json.Object();
-		params.set_int_member("first_line", first_line);
-		params.set_int_member("last_line", last_line);
-		send_edit_request(tab, "render_lines", params, new ResponseHandler((owned)response_handler));
 	}
 
 	public void send_request_lines(string tab, int64 first_line, int64 last_line) {

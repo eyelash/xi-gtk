@@ -95,7 +95,6 @@ class Line {
 		layout = new Pango.Layout(context);
 		layout.set_text(text, -1);
 		layout.set_font_description(font_description);
-		layout.set_attributes(new Pango.AttrList());
 	}
 
 	public void set_cursors(Json.Array json_cursors) {
@@ -105,35 +104,7 @@ class Line {
 		}
 	}
 
-	public void set_style(uint start_index, uint end_index, Style style) {
-		if (style.foreground != null) {
-			set_foreground(start_index, end_index, style.foreground);
-		}
-		if (style.background != null) {
-			set_background(start_index, end_index, style.background);
-		}
-		if (style.weight != null) {
-			set_weight(start_index, end_index, style.weight);
-		}
-		if (style.italic) {
-			set_italic(start_index, end_index);
-		}
-	}
-
-	public void set_styles(Json.Array styles) {
-		uint offset = 0;
-		for (int i = 0; i < styles.get_length(); i += 3) {
-			uint start = offset + (uint)styles.get_int_element(i);
-			uint end = start + (uint)styles.get_int_element(i+1);
-			int style_id = (int)styles.get_int_element(i+2);
-			Style style = StyleMap.get_instance().get_style(style_id);
-			set_style(start, end, style);
-			offset = end;
-		}
-	}
-
-	public void set_foreground(uint start_index, uint end_index, Gdk.RGBA color) {
-		var attributes = layout.get_attributes();
+	private static void set_foreground(Pango.AttrList attributes, uint start_index, uint end_index, Gdk.RGBA color) {
 		var attribute = Pango.attr_foreground_new((uint16)(color.red*uint16.MAX), (uint16)(color.green*uint16.MAX), (uint16)(color.blue*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
@@ -142,11 +113,9 @@ class Line {
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
 		attributes.change((owned)attribute);*/
-		layout.set_attributes(attributes);
 	}
 
-	public void set_background(uint start_index, uint end_index, Gdk.RGBA color) {
-		var attributes = layout.get_attributes();
+	private static void set_background(Pango.AttrList attributes, uint start_index, uint end_index, Gdk.RGBA color) {
 		var attribute = Pango.attr_background_new((uint16)(color.red*uint16.MAX), (uint16)(color.green*uint16.MAX), (uint16)(color.blue*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
@@ -155,33 +124,51 @@ class Line {
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
 		attributes.change((owned)attribute);*/
-		layout.set_attributes(attributes);
 	}
 
-	public void set_weight(uint start_index, uint end_index, Pango.Weight weight) {
-		var attributes = layout.get_attributes();
+	private static void set_weight(Pango.AttrList attributes, uint start_index, uint end_index, Pango.Weight weight) {
 		var attribute = Pango.attr_weight_new(weight);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
 		attributes.change((owned)attribute);
-		layout.set_attributes(attributes);
 	}
 
-	public void set_underline(uint start_index, uint end_index) {
-		var attributes = layout.get_attributes();
+	private static void set_underline(Pango.AttrList attributes, uint start_index, uint end_index) {
 		var attribute = Pango.attr_underline_new(Pango.Underline.SINGLE);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
 		attributes.change((owned)attribute);
-		layout.set_attributes(attributes);
 	}
 
-	public void set_italic(uint start_index, uint end_index) {
-		var attributes = layout.get_attributes();
+	private static void set_italic(Pango.AttrList attributes, uint start_index, uint end_index) {
 		var attribute = Pango.attr_style_new(Pango.Style.ITALIC);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
 		attributes.change((owned)attribute);
+	}
+
+	public void set_styles(Json.Array styles) {
+		var attributes = new Pango.AttrList();
+		uint offset = 0;
+		for (int i = 0; i < styles.get_length(); i += 3) {
+			uint start = offset + (uint)styles.get_int_element(i);
+			uint end = start + (uint)styles.get_int_element(i+1);
+			int style_id = (int)styles.get_int_element(i+2);
+			Style style = StyleMap.get_instance().get_style(style_id);
+			if (style.foreground != null) {
+				set_foreground(attributes, start, end, style.foreground);
+			}
+			if (style.background != null) {
+				set_background(attributes, start, end, style.background);
+			}
+			if (style.weight != null) {
+				set_weight(attributes, start, end, style.weight);
+			}
+			if (style.italic) {
+				set_italic(attributes, start, end);
+			}
+			offset = end;
+		}
 		layout.set_attributes(attributes);
 	}
 
@@ -252,7 +239,6 @@ class LinesCache {
 			var op = ops.get_object_element(i);
 			switch (op.get_string_member("op")) {
 				case "copy":
-					stdout.printf("op: copy\n");
 					int n = (int)op.get_int_member("n");
 					if (index < invalid_before) {
 						int invalid = int.min(n, invalid_before - index);
@@ -269,17 +255,14 @@ class LinesCache {
 					index += n;
 					break;
 				case "skip":
-					stdout.printf("op: skip\n");
 					int n = (int)op.get_int_member("n");
 					index += n;
 					break;
 				case "invalidate":
-					stdout.printf("op: invalidate\n");
 					int n = (int)op.get_int_member("n");
 					add_invalid(new_lines, ref new_invalid_before, ref new_invalid_after, n);
 					break;
 				case "ins":
-					stdout.printf("op: ins\n");
 					var json_lines = op.get_array_member("lines");
 					for (int j = 0; j < json_lines.get_length(); j++) {
 						var json_line = json_lines.get_object_element(j);
@@ -297,7 +280,18 @@ class LinesCache {
 				case "update":
 					stdout.printf("op: update\n");
 					var json_lines = op.get_array_member("lines");
-					// TODO: implement
+					for (int j = 0; j < json_lines.get_length(); j++) {
+						var json_line = json_lines.get_object_element(j);
+						var line = lines[index-invalid_before];
+						if (json_line.has_member("cursor")) {
+							line.set_cursors(json_line.get_array_member("cursor"));
+						}
+						if (json_line.has_member("styles")) {
+							line.set_styles(json_line.get_array_member("styles"));
+						}
+						add_line(new_lines, ref new_invalid_before, ref new_invalid_after, line);
+						index++;
+					}
 					break;
 			}
 		}
