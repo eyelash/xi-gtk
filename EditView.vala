@@ -428,7 +428,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	public override bool key_press_event(Gdk.EventKey event) {
 		if (!im_context.filter_keypress(event)) {
-			string suffix = (event.state & Gdk.ModifierType.SHIFT_MASK) != 0 ? "_and_modify_selection" : "";
+			unowned string suffix = (event.state & Gdk.ModifierType.SHIFT_MASK) != 0 ? "_and_modify_selection" : "";
 			switch (event.keyval) {
 				case Gdk.Key.Return:
 					core_connection.send_edit(tab, "insert_newline");
@@ -446,13 +446,15 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 					core_connection.send_edit(tab, "move_up" + suffix);
 					break;
 				case Gdk.Key.Right:
-					core_connection.send_edit(tab, "move_right" + suffix);
+					unowned string command = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0 ? "move_word_right" : "move_right";
+					core_connection.send_edit(tab, command + suffix);
 					break;
 				case Gdk.Key.Down:
 					core_connection.send_edit(tab, "move_down" + suffix);
 					break;
 				case Gdk.Key.Left:
-					core_connection.send_edit(tab, "move_left" + suffix);
+					unowned string command = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0 ? "move_word_left" : "move_left";
+					core_connection.send_edit(tab, command + suffix);
 					break;
 				case Gdk.Key.Page_Up:
 					core_connection.send_edit(tab, "page_up" + suffix);
