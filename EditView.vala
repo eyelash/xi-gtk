@@ -353,13 +353,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		column = _line != null ? _line.x_to_index(x) : 0;
 	}
 
-	private void send_request_lines(int first_line, int last_line) {
-		first_line = int.max(first_line, this.first_line);
-		last_line = int.min(last_line, this.first_line + visible_lines);
-		if (first_line == last_line) return;
-		core_connection.send_request_lines(tab, first_line, last_line);
-	}
-
 	public EditView(string tab, File? file, CoreConnection core_connection) {
 		this.tab = tab;
 		this.file = file;
@@ -401,9 +394,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		visible_lines = (int)(allocation.height / line_height) + 2;
 		if (visible_lines != previous_visible_lines) {
 			core_connection.send_scroll(tab, first_line, first_line + visible_lines);
-			if (visible_lines > previous_visible_lines) {
-				send_request_lines(first_line + previous_visible_lines, first_line + visible_lines);
-			}
 		}
 		_vadjustment.page_size = allocation.height;
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
@@ -505,11 +495,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		double value = _vadjustment.value;
 		int previous_first_line = first_line;
 		first_line = (int)(value / line_height);
-		if (first_line > previous_first_line) {
-			send_request_lines(previous_first_line + visible_lines, first_line + visible_lines);
-			core_connection.send_scroll(tab, first_line, first_line + visible_lines);
-		} else if (first_line < previous_first_line) {
-			send_request_lines(first_line, previous_first_line);
+		if (first_line != previous_first_line) {
 			core_connection.send_scroll(tab, first_line, first_line + visible_lines);
 		}
 		y_offset = Math.round(first_line*line_height - value);
