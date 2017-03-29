@@ -126,13 +126,13 @@ class CoreConnection {
 		send_notification("edit", params);
 	}
 
-	private void send_edit_request(string tab, string method, Json.Object edit_params, ResponseHandler response_handler) {
+	/*private void send_edit_request(string tab, string method, Json.Object edit_params, ResponseHandler response_handler) {
 		var params = new Json.Object();
 		params.set_string_member("method", method);
 		params.set_string_member("tab", tab);
 		params.set_object_member("params", edit_params);
 		send_request("edit", params, response_handler);
-	}
+	}*/
 
 	public void send_new_tab(owned ResponseHandler.Delegate response_handler) {
 		send_request("new_tab", new Json.Object(), new ResponseHandler((owned)response_handler));
@@ -186,12 +186,12 @@ class CoreConnection {
 		send_edit_array(tab, "drag", params);
 	}
 
-	public void send_request_lines(string tab, int64 first_line, int64 last_line) {
+	/*public void send_request_lines(string tab, int64 first_line, int64 last_line) {
 		var params = new Json.Array();
 		params.add_int_element(first_line);
 		params.add_int_element(last_line);
 		send_edit_array(tab, "request_lines", params);
-	}
+	}*/
 
 	private static DataInputStream create_input_stream(int fd, owned PollableSourceFunc func) {
 		var stream = new UnixInputStream(fd, true);

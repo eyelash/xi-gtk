@@ -36,10 +36,10 @@ class Line {
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
 		attributes.change((owned)attribute);
-		/*attribute = Pango.attr_foreground_alpha_new((uint16)(color.alpha*uint16.MAX));
+		attribute = Pango.attr_foreground_alpha_new((uint16)(color.alpha*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		attributes.change((owned)attribute);*/
+		attributes.change((owned)attribute);
 	}
 
 	private static void set_background(Pango.AttrList attributes, uint start_index, uint end_index, Gdk.RGBA color) {
@@ -47,10 +47,10 @@ class Line {
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
 		attributes.change((owned)attribute);
-		/*attribute = Pango.attr_background_alpha_new((uint16)(color.alpha*uint16.MAX));
+		attribute = Pango.attr_background_alpha_new((uint16)(color.alpha*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		attributes.change((owned)attribute);*/
+		attributes.change((owned)attribute);
 	}
 
 	private static void set_weight(Pango.AttrList attributes, uint start_index, uint end_index, Pango.Weight weight) {
@@ -60,12 +60,12 @@ class Line {
 		attributes.change((owned)attribute);
 	}
 
-	private static void set_underline(Pango.AttrList attributes, uint start_index, uint end_index) {
+	/*private static void set_underline(Pango.AttrList attributes, uint start_index, uint end_index) {
 		var attribute = Pango.attr_underline_new(Pango.Underline.SINGLE);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
 		attributes.change((owned)attribute);
-	}
+	}*/
 
 	private static void set_italic(Pango.AttrList attributes, uint start_index, uint end_index) {
 		var attribute = Pango.attr_style_new(Pango.Style.ITALIC);
