@@ -6,25 +6,28 @@
 
 ## Instructions
 
-### Install the Dependencies
-
-```sh
-# Debian/Ubuntu:
-sudo apt install build-essential git cargo valac meson libgtk-3-dev libjson-glib-dev
-# Arch:
-sudo pacman -S git cargo vala meson
-```
-
 ### Build and Install xi-core
+
+Make sure you have a recent version of [Rust](https://www.rust-lang.org) and Cargo installed (either from your distribution's repositories or with [rustup](https://rustup.rs)) and that `~/.cargo/bin` is in your `PATH` environment variable.
 
 ```sh
 git clone https://github.com/google/xi-editor.git
 cd xi-editor/rust
 cargo install
-export PATH=~/.cargo/bin:$PATH
 ```
 
 ### Build and Install xi-gtk
+
+First you need to install the dependencies.
+
+```sh
+# Debian/Ubuntu:
+sudo apt install build-essential valac meson libgtk-3-dev libjson-glib-dev
+# Arch:
+sudo pacman -S vala meson
+```
+
+Once you have the dependencies installed you can build xi-gtk.
 
 ```sh
 git clone https://github.com/eyelash/xi-gtk.git
@@ -33,8 +36,9 @@ mkdir build
 cd build
 meson ..
 ninja
-sudo ninja install
 ```
+
+Now you can either launch xi-gtk from the build directory with `./xi-gtk` or install it with `sudo ninja install`.
 
 ## Shortcuts
 
