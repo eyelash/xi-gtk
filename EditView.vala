@@ -109,6 +109,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public override bool draw(Cairo.Context cr) {
+		Gdk.cairo_set_source_rgba(cr, Utilities.convert_color(0xffffffffu));
+		cr.paint();
 		for (int i = first_line; i < first_line + visible_lines; i++) {
 			var line = lines_cache.get_line(i);
 			if (line != null) {

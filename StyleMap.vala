@@ -29,38 +29,24 @@ class StyleMap {
 		map = new GenericArray<Style?>();
 		// style id 0: selection
 		map.add(Style() {
-			background = {0.8, 0.8, 0.8, 1.0}
+			background = Utilities.convert_color(0xfff8eec7u)
 		});
-	}
-
-	private static Gdk.RGBA convert_color(uint32 color) {
-		return Gdk.RGBA() {
-			red = ((color >> 16) & 0xFF) / 255.0,
-			green = ((color >> 8) & 0xFF) / 255.0,
-			blue = (color & 0xFF) / 255.0,
-			alpha = ((color >> 24) & 0xFF) / 255.0
-		};
-	}
-
-	private static Pango.Weight convert_weight(int weight) {
-		switch (weight) {
-			case 400: return Pango.Weight.NORMAL;
-			case 700: return Pango.Weight.BOLD;
-			default: return Pango.Weight.NORMAL;
-		}
 	}
 
 	public void def_style(Json.Object json_style) {
 		int id = (int)json_style.get_int_member("id");
 		Style style = Style();
 		if (json_style.has_member("fg_color")) {
-			style.foreground = convert_color((uint32)json_style.get_int_member("fg_color"));
+			uint32 fg_color = (uint32)json_style.get_int_member("fg_color");
+			style.foreground = Utilities.convert_color(fg_color);
 		}
 		if (json_style.has_member("bg_color")) {
-			style.background = convert_color((uint32)json_style.get_int_member("bg_color"));
+			uint32 bg_color = (uint32)json_style.get_int_member("bg_color");
+			style.background = Utilities.convert_color(bg_color);
 		}
 		if (json_style.has_member("weight")) {
-			style.weight = convert_weight((int)json_style.get_int_member("weight"));
+			int weight = (int)json_style.get_int_member("weight");
+			style.weight = Utilities.convert_weight(weight);
 		}
 		if (json_style.has_member("italic")) {
 			style.italic = json_style.get_boolean_member("italic");

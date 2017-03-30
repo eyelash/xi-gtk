@@ -10,6 +10,7 @@ sources = [
 	'Style.vala',
 	'StyleMap.vala',
 	'TabLabel.vala',
+	'Utilities.vala',
 ]
 
 dependencies = [

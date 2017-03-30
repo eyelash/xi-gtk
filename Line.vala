@@ -100,6 +100,12 @@ class Line {
 	}
 
 	public void draw(Cairo.Context cr, double y, double width, double ascent, double line_height, bool draw_cursors) {
+		if (cursors.length > 0) {
+			Gdk.cairo_set_source_rgba(cr, Utilities.convert_color(0xfff5f5f5u));
+			cr.rectangle(0, y, width, line_height);
+			cr.fill();
+		}
+		Gdk.cairo_set_source_rgba(cr, Utilities.convert_color(0xff323232u));
 		cr.move_to(0, y + ascent);
 		Pango.cairo_show_layout_line(cr, layout.get_line_readonly(0));
 		if (draw_cursors) {
