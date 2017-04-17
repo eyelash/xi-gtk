@@ -163,6 +163,14 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 				case Gdk.Key.Page_Down:
 					send_edit("page_down" + suffix);
 					break;
+				case Gdk.Key.Home:
+					unowned string command = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0 ? "move_to_beginning_of_document" : "move_to_left_end_of_line";
+					send_edit(command + suffix);
+					break;
+				case Gdk.Key.End:
+					unowned string command = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0 ? "move_to_end_of_document" : "move_to_right_end_of_line";
+					send_edit(command + suffix);
+					break;
 			}
 		}
 		return Gdk.EVENT_STOP;
