@@ -23,14 +23,13 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	private double y_offset;
 	private LinesCache lines_cache;
-	private int total_lines;
 	private int first_line;
 	private int visible_lines;
 	private int blink_time;
 	private int blink_counter;
 	private TimeoutSource blink_source;
 
-	public string tab { private set; get; }
+	public string view_id { private set; get; }
 	public string label { private set; get; }
 
 	// Gtk.Scrollable implementation
@@ -55,8 +54,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		column = _line != null ? _line.x_to_index(x) : 0;
 	}
 
-	public EditView(string tab, File? file, CoreConnection core_connection) {
-		this.tab = tab;
+	public EditView(string view_id, File? file, CoreConnection core_connection) {
+		this.view_id = view_id;
 		this.file = file;
 		this.core_connection = core_connection;
 		core_connection.update_received.connect(update);
@@ -74,7 +73,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		set_has_window(true);
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
 		if (file != null) {
-			core_connection.send_open(tab, file.get_path());
 			label = file.get_basename();
 		} else {
 			label = "untitled";
@@ -82,7 +80,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	~EditView() {
-		core_connection.send_delete_tab(tab);
+		core_connection.send_close_view(view_id);
 	}
 
 	public override void realize() {
@@ -95,7 +93,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		int previous_visible_lines = visible_lines;
 		visible_lines = (int)(allocation.height / line_height) + 2;
 		if (visible_lines != previous_visible_lines) {
-			core_connection.send_scroll(tab, first_line, first_line + visible_lines);
+			core_connection.send_scroll(view_id, first_line, first_line + visible_lines);
 		}
 		_vadjustment.page_size = allocation.height;
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
@@ -104,7 +102,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public override void get_preferred_height(out int minimum_height, out int natural_height) {
-		minimum_height = (int)(total_lines * line_height);
+		minimum_height = (int)(lines_cache.get_height() * line_height);
 		natural_height = minimum_height;
 	}
 
@@ -125,36 +123,36 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			unowned string suffix = (event.state & Gdk.ModifierType.SHIFT_MASK) != 0 ? "_and_modify_selection" : "";
 			switch (event.keyval) {
 				case Gdk.Key.Return:
-					core_connection.send_edit(tab, "insert_newline");
+					send_edit("insert_newline");
 					break;
 				case Gdk.Key.BackSpace:
-					core_connection.send_edit(tab, "delete_backward");
+					send_edit("delete_backward");
 					break;
 				case Gdk.Key.Delete:
-					core_connection.send_edit(tab, "delete_forward");
+					send_edit("delete_forward");
 					break;
 				case Gdk.Key.Tab:
-					core_connection.send_edit(tab, "insert_tab");
+					send_edit("insert_tab");
 					break;
 				case Gdk.Key.Up:
-					core_connection.send_edit(tab, "move_up" + suffix);
+					send_edit("move_up" + suffix);
 					break;
 				case Gdk.Key.Right:
 					unowned string command = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0 ? "move_word_right" : "move_right";
-					core_connection.send_edit(tab, command + suffix);
+					send_edit(command + suffix);
 					break;
 				case Gdk.Key.Down:
-					core_connection.send_edit(tab, "move_down" + suffix);
+					send_edit("move_down" + suffix);
 					break;
 				case Gdk.Key.Left:
 					unowned string command = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0 ? "move_word_left" : "move_left";
-					core_connection.send_edit(tab, command + suffix);
+					send_edit(command + suffix);
 					break;
 				case Gdk.Key.Page_Up:
-					core_connection.send_edit(tab, "page_up" + suffix);
+					send_edit("page_up" + suffix);
 					break;
 				case Gdk.Key.Page_Down:
-					core_connection.send_edit(tab, "page_down" + suffix);
+					send_edit("page_down" + suffix);
 					break;
 			}
 		}
@@ -166,7 +164,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	private void handle_commit(string str) {
-		core_connection.send_insert(tab, str);
+		core_connection.send_insert(view_id, str);
 	}
 
 	public override bool button_press_event(Gdk.EventButton event) {
@@ -174,13 +172,13 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		convert_xy(event.x, event.y, out line, out column);
 		switch (event.type) {
 			case Gdk.EventType.BUTTON_PRESS:
-				core_connection.send_click(tab, line, column, 0, 1);
+				core_connection.send_click(view_id, line, column, 0, 1);
 				break;
 			case Gdk.EventType.2BUTTON_PRESS:
-				core_connection.send_click(tab, line, column, 0, 2);
+				core_connection.send_click(view_id, line, column, 0, 2);
 				break;
 			case Gdk.EventType.3BUTTON_PRESS:
-				core_connection.send_click(tab, line, column, 0, 3);
+				core_connection.send_click(view_id, line, column, 0, 3);
 				break;
 		}
 		return Gdk.EVENT_STOP;
@@ -191,7 +189,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public override bool motion_notify_event(Gdk.EventMotion event) {
 		int line, column;
 		convert_xy(event.x, event.y, out line, out column);
-		core_connection.send_drag(tab, line, column, 0);
+		core_connection.send_drag(view_id, line, column, 0);
 		return Gdk.EVENT_STOP;
 	}
 
@@ -200,7 +198,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		int previous_first_line = first_line;
 		first_line = (int)(value / line_height);
 		if (first_line != previous_first_line) {
-			core_connection.send_scroll(tab, first_line, first_line + visible_lines);
+			core_connection.send_scroll(view_id, first_line, first_line + visible_lines);
 		}
 		y_offset = Math.round(first_line*line_height - value);
 		queue_draw();
@@ -220,8 +218,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	// public interface
-	public void update(string tab, Json.Object update) {
-		if (tab != this.tab) return;
+	public void update(string view_id, Json.Object update) {
+		if (view_id != this.view_id) return;
 		lines_cache.update(update);
 		_vadjustment.upper = lines_cache.get_height() * line_height;
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
@@ -231,8 +229,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		queue_draw();
 	}
 
-	public void scroll_to(string tab, int line, int col) {
-		if (tab != this.tab) return;
+	public void scroll_to(string view_id, int line, int col) {
+		if (view_id != this.view_id) return;
 		if (line * line_height < first_line * line_height - y_offset) {
 			_vadjustment.value = line * line_height;
 		} else if ((line + 1) * line_height > first_line * line_height - y_offset + get_allocated_height()) {
@@ -240,12 +238,16 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 	}
 
+	public void send_edit(string method, Json.Object edit_params = new Json.Object()) {
+		core_connection.send_edit(view_id, method, edit_params);
+	}
+
 	public void save() {
 		if (file == null) {
 			save_as();
 			return;
 		}
-		core_connection.send_save(tab, file.get_path());
+		core_connection.send_save(view_id, file.get_path());
 	}
 	public void save_as() {
 		var dialog = new Gtk.FileChooserDialog(null, get_toplevel() as Gtk.Window, Gtk.FileChooserAction.SAVE, "Cancel", Gtk.ResponseType.CANCEL, "Save", Gtk.ResponseType.ACCEPT);
@@ -253,16 +255,16 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		if (dialog.run() == Gtk.ResponseType.ACCEPT) {
 			file = dialog.get_file();
 			label = file.get_basename();
-			core_connection.send_save(tab, file.get_path());
+			core_connection.send_save(view_id, file.get_path());
 		}
 		dialog.destroy();
 	}
 
 	public void undo() {
-		core_connection.send_edit(tab, "undo");
+		core_connection.send_edit(view_id, "undo");
 	}
 	public void redo() {
-		core_connection.send_edit(tab, "redo");
+		core_connection.send_edit(view_id, "redo");
 	}
 }
 

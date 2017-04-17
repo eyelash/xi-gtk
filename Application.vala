@@ -32,9 +32,9 @@ class Application: Gtk.Application {
 	}
 
 	private void add_new_tab(File? file = null) {
-		core_connection.send_new_tab((result) => {
-			string tab = result.get_string();
-			notebook.add_edit_view(new EditView(tab, file, core_connection));
+		core_connection.send_new_view(file != null ? file.get_basename() : null, (result) => {
+			string view_id = result.get_string();
+			notebook.add_edit_view(new EditView(view_id, file, core_connection));
 		});
 	}
 

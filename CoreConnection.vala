@@ -31,8 +31,8 @@ class CoreConnection {
 	}
 	private HashTable<int, ResponseHandler> response_handlers;
 
-	public signal void update_received(string tab, Json.Object update);
-	public signal void scroll_to_received(string tab, int line, int col);
+	public signal void update_received(string view_id, Json.Object update);
+	public signal void scroll_to_received(string view_id, int line, int col);
 	public signal void def_style_received(Json.Object params);
 
 	private bool receive() {
@@ -57,15 +57,15 @@ class CoreConnection {
 					var params = root.get_object_member("params");
 					switch (method) {
 						case "update":
-							var tab = params.get_string_member("tab");
+							var view_id = params.get_string_member("view_id");
 							var update = params.get_object_member("update");
-							update_received(tab, update);
+							update_received(view_id, update);
 							break;
 						case "scroll_to":
-							var tab = params.get_string_member("tab");
+							var view_id = params.get_string_member("view_id");
 							var scroll_to_line = (int)params.get_int_member("line");
 							var scroll_to_col = (int)params.get_int_member("col");
-							scroll_to_received(tab, scroll_to_line, scroll_to_col);
+							scroll_to_received(view_id, scroll_to_line, scroll_to_col);
 							break;
 						case "def_style":
 							def_style_received(params);
@@ -110,18 +110,18 @@ class CoreConnection {
 		send(root);
 	}
 
-	public void send_edit(string tab, string method, Json.Object edit_params = new Json.Object()) {
+	public void send_edit(string view_id, string method, Json.Object edit_params = new Json.Object()) {
 		var params = new Json.Object();
 		params.set_string_member("method", method);
-		params.set_string_member("tab", tab);
+		params.set_string_member("view_id", view_id);
 		params.set_object_member("params", edit_params);
 		send_notification("edit", params);
 	}
 
-	private void send_edit_array(string tab, string method, Json.Array edit_params) {
+	private void send_edit_array(string view_id, string method, Json.Array edit_params) {
 		var params = new Json.Object();
 		params.set_string_member("method", method);
-		params.set_string_member("tab", tab);
+		params.set_string_member("view_id", view_id);
 		params.set_array_member("params", edit_params);
 		send_notification("edit", params);
 	}
@@ -134,56 +134,54 @@ class CoreConnection {
 		send_request("edit", params, response_handler);
 	}*/
 
-	public void send_new_tab(owned ResponseHandler.Delegate response_handler) {
-		send_request("new_tab", new Json.Object(), new ResponseHandler((owned)response_handler));
-	}
-
-	public void send_delete_tab(string tab) {
+	public void send_new_view(string? file_path, owned ResponseHandler.Delegate response_handler) {
 		var params = new Json.Object();
-		params.set_string_member("tab", tab);
-		send_notification("delete_tab", params);
+		if (file_path != null) {
+			params.set_string_member("file_path", file_path);
+		}
+		send_request("new_view", params, new ResponseHandler((owned)response_handler));
 	}
 
-	public void send_insert(string tab, string chars) {
+	public void send_close_view(string view_id) {
+		var params = new Json.Object();
+		params.set_string_member("view_id", view_id);
+		send_notification("close_view", params);
+	}
+
+	public void send_insert(string view_id, string chars) {
 		var params = new Json.Object();
 		params.set_string_member("chars", chars);
-		send_edit(tab, "insert", params);
+		send_edit(view_id, "insert", params);
 	}
 
-	public void send_open(string tab, string filename) {
+	public void send_save(string view_id, string filename) {
 		var params = new Json.Object();
 		params.set_string_member("filename", filename);
-		send_edit(tab, "open", params);
+		send_edit(view_id, "save", params);
 	}
 
-	public void send_save(string tab, string filename) {
-		var params = new Json.Object();
-		params.set_string_member("filename", filename);
-		send_edit(tab, "save", params);
-	}
-
-	public void send_scroll(string tab, int64 first_line, int64 last_line) {
+	public void send_scroll(string view_id, int64 first_line, int64 last_line) {
 		var params = new Json.Array();
 		params.add_int_element(first_line);
 		params.add_int_element(last_line);
-		send_edit_array(tab, "scroll", params);
+		send_edit_array(view_id, "scroll", params);
 	}
 
-	public void send_click(string tab, int64 line, int64 column, int64 modifiers, int64 click_count) {
+	public void send_click(string view_id, int64 line, int64 column, int64 modifiers, int64 click_count) {
 		var params = new Json.Array();
 		params.add_int_element(line);
 		params.add_int_element(column);
 		params.add_int_element(modifiers);
 		params.add_int_element(click_count);
-		send_edit_array(tab, "click", params);
+		send_edit_array(view_id, "click", params);
 	}
 
-	public void send_drag(string tab, int64 line, int64 column, int64 modifiers) {
+	public void send_drag(string view_id, int64 line, int64 column, int64 modifiers) {
 		var params = new Json.Array();
 		params.add_int_element(line);
 		params.add_int_element(column);
 		params.add_int_element(modifiers);
-		send_edit_array(tab, "drag", params);
+		send_edit_array(view_id, "drag", params);
 	}
 
 	/*public void send_request_lines(string tab, int64 first_line, int64 last_line) {
