@@ -154,10 +154,11 @@ class CoreConnection {
 		send_edit(view_id, "insert", params);
 	}
 
-	public void send_save(string view_id, string filename) {
+	public void send_save(string view_id, string file_path) {
 		var params = new Json.Object();
-		params.set_string_member("filename", filename);
-		send_edit(view_id, "save", params);
+		params.set_string_member("view_id", view_id);
+		params.set_string_member("file_path", file_path);
+		send_notification("save", params);
 	}
 
 	public void send_scroll(string view_id, int64 first_line, int64 last_line) {
