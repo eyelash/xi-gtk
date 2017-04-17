@@ -49,7 +49,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	// private helper methods
 	private void convert_xy(double x, double y, out int line, out int column) {
-		line = (int)((y - y_offset) / line_height) + first_line;
+		line = int.max(0, (int)((y - y_offset) / line_height) + first_line);
 		var _line = lines_cache.get_line(line);
 		column = _line != null ? _line.x_to_index(x) : 0;
 	}
