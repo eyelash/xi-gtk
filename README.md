@@ -50,6 +50,7 @@ Shortcut                                         | Command
 <kbd>Control</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | Save As
 <kbd>Control</kbd>+<kbd>Z</kbd>                  | Undo
 <kbd>Control</kbd>+<kbd>Y</kbd>                  | Redo
+<kbd>Control</kbd>+<kbd>Q</kbd>                  | Quit
 
 ## To Do
 
