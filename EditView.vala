@@ -71,12 +71,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		blink_time = settings.get_int("cursor-blink-time") / 2;
 		can_focus = true;
 		set_has_window(true);
-		add_events(Gdk.EventMask.BUTTON_PRESS_MASK |
-			Gdk.EventMask.BUTTON_RELEASE_MASK |
-			Gdk.EventMask.BUTTON_MOTION_MASK |
-			Gdk.EventMask.SCROLL_MASK |
-			Gdk.EventMask.SMOOTH_SCROLL_MASK);
-
+		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
 		if (file != null) {
 			label = file.get_basename();
 		} else {
