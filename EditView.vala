@@ -27,9 +27,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private LinesCache lines_cache;
 	private int first_line;
 	private int visible_lines;
-	private int blink_time;
-	private int blink_counter;
-	private TimeoutSource blink_source;
+	private Blinker blinker;
 
 	public string view_id { private set; get; }
 	public string label { private set; get; }
@@ -71,8 +69,10 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		line_height = ascent + Pango.units_to_double(metrics.get_descent());
 		char_width = Pango.units_to_double(metrics.get_approximate_char_width());
 		padding = char_width;
+		y_offset = padding;
 		lines_cache = new LinesCache(get_pango_context(), font_description);
-		blink_time = settings.get_int("cursor-blink-time") / 2;
+		blinker = new Blinker(settings.get_int("cursor-blink-time") / 2);
+		blinker.redraw.connect(this.queue_draw);
 		can_focus = true;
 		set_has_window(true);
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
@@ -90,6 +90,11 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public override void realize() {
 		base.realize();
 		get_window().set_cursor(new Gdk.Cursor.for_display(get_display(), Gdk.CursorType.XTERM));
+	}
+
+	public override void unmap() {
+		blinker.stop();
+		base.unmap();
 	}
 
 	public override void size_allocate(Gtk.Allocation allocation) {
@@ -116,7 +121,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		for (int i = first_line; i < first_line + visible_lines; i++) {
 			var line = lines_cache.get_line(i);
 			if (line != null) {
-				line.draw(cr, padding, y_offset + (i - first_line) * line_height, get_allocated_width(), ascent, line_height, blink_counter % 2 == 0);
+				line.draw(cr, padding, y_offset + (i - first_line) * line_height, get_allocated_width(), ascent, line_height, blinker.draw_cursor());
 			}
 		}
 		return Gdk.EVENT_STOP;
@@ -208,19 +213,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		queue_draw();
 	}
 
-	private bool blink() {
-		blink_counter++;
-		queue_draw();
-		return blink_counter < 18;
-	}
-	private void blink_start() {
-		if (blink_source != null) blink_source.destroy();
-		blink_counter = 0;
-		blink_source = new TimeoutSource(blink_time);
-		blink_source.set_callback(blink);
-		blink_source.attach(null);
-	}
-
 	// public interface
 	public void update(string view_id, Json.Object update) {
 		if (view_id != this.view_id) return;
@@ -229,7 +221,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
 			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
 		}
-		blink_start();
+		blinker.restart();
 		queue_draw();
 	}
 

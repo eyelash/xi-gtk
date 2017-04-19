@@ -2,6 +2,7 @@ project('xi-gtk', 'vala', 'c')
 
 sources = [
 	'Application.vala',
+	'Blinker.vala',
 	'CoreConnection.vala',
 	'EditView.vala',
 	'Line.vala',
