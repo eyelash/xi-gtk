@@ -163,6 +163,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 				case Gdk.Key.Page_Down:
 					send_edit("page_down" + suffix);
 					break;
+				default:
+					return Gdk.EVENT_PROPAGATE;
 			}
 		}
 		return Gdk.EVENT_STOP;
