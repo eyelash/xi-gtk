@@ -235,10 +235,10 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	public void scroll_to(string view_id, int line, int col) {
 		if (view_id != this.view_id) return;
-		if (line * line_height < first_line * line_height - y_offset) {
-			_vadjustment.value = line * line_height;
-		} else if ((line + 1) * line_height > first_line * line_height - y_offset + get_allocated_height()) {
-			_vadjustment.value = (line + 1) * line_height - get_allocated_height();
+		if (line * line_height + padding < first_line * line_height - y_offset) {
+			_vadjustment.value = line * line_height + padding;
+		} else if ((line + 1) * line_height + padding > first_line * line_height - y_offset + get_allocated_height()) {
+			_vadjustment.value = (line + 1) * line_height + padding - get_allocated_height();
 		}
 	}
 
