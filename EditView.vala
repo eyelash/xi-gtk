@@ -20,7 +20,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private Gtk.IMContext im_context;
 	private double ascent;
 	private double line_height;
+	private double char_width;
 
+	private double padding;
 	private double y_offset;
 	private LinesCache lines_cache;
 	private int first_line;
@@ -51,7 +53,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private void convert_xy(double x, double y, out int line, out int column) {
 		line = int.max(0, (int)((y - y_offset) / line_height) + first_line);
 		var _line = lines_cache.get_line(line);
-		column = _line != null ? _line.x_to_index(x) : 0;
+		column = _line != null ? _line.x_to_index(x-padding) : 0;
 	}
 
 	public EditView(string view_id, File? file, CoreConnection core_connection) {
@@ -67,6 +69,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		var metrics = get_pango_context().get_metrics(font_description, null);
 		ascent = Pango.units_to_double(metrics.get_ascent());
 		line_height = ascent + Pango.units_to_double(metrics.get_descent());
+		char_width = Pango.units_to_double(metrics.get_approximate_char_width());
+		padding = char_width;
 		lines_cache = new LinesCache(get_pango_context(), font_description);
 		blink_time = settings.get_int("cursor-blink-time") / 2;
 		can_focus = true;
@@ -112,7 +116,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		for (int i = first_line; i < first_line + visible_lines; i++) {
 			var line = lines_cache.get_line(i);
 			if (line != null) {
-				line.draw(cr, y_offset + (i - first_line) * line_height, get_allocated_width(), ascent, line_height, blink_counter % 2 == 0);
+				line.draw(cr, padding, y_offset + (i - first_line) * line_height, get_allocated_width(), ascent, line_height, blink_counter % 2 == 0);
 			}
 		}
 		return Gdk.EVENT_STOP;
@@ -194,9 +198,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	private void scroll() {
-		double value = _vadjustment.value;
+		double value = _vadjustment.value - padding;
 		int previous_first_line = first_line;
-		first_line = (int)(value / line_height);
+		first_line = int.max(0, (int)(value / line_height));
 		if (first_line != previous_first_line) {
 			core_connection.send_scroll(view_id, first_line, first_line + visible_lines);
 		}
@@ -221,7 +225,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public void update(string view_id, Json.Object update) {
 		if (view_id != this.view_id) return;
 		lines_cache.update(update);
-		_vadjustment.upper = lines_cache.get_height() * line_height;
+		_vadjustment.upper = lines_cache.get_height() * line_height + 2 * padding;
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
 			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
 		}
