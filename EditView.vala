@@ -31,6 +31,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	public string view_id { private set; get; }
 	public string label { private set; get; }
+	public bool has_unsaved_changes { private set; get; }
 
 	// Gtk.Scrollable implementation
 	public Gtk.Adjustment hadjustment { construct set; get; }
@@ -234,6 +235,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 		blinker.restart();
 		queue_draw();
+		if (update.has_member("pristine")) {
+			has_unsaved_changes = !update.get_boolean_member("pristine");
+		}
 	}
 
 	public void scroll_to(string view_id, int line, int col) {

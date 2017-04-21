@@ -34,6 +34,10 @@ class TabLabel: Gtk.Box {
 		close_button.clicked.connect(() => close_clicked(this.edit_view));
 		pack_end(close_button, false, true);
 
+		var image = new Gtk.Image.from_icon_name("media-record-symbolic", Gtk.IconSize.MENU);
+		pack_end(image, false, true);
+		edit_view.bind_property("has-unsaved-changes", image, "visible");
+
 		show_all();
 	}
 }
