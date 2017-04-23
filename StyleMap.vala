@@ -45,8 +45,7 @@ class StyleMap {
 			style.background = Utilities.convert_color(bg_color);
 		}
 		if (json_style.has_member("weight")) {
-			int weight = (int)json_style.get_int_member("weight");
-			style.weight = Utilities.convert_weight(weight);
+			style.weight = (Pango.Weight)json_style.get_int_member("weight");
 		}
 		if (json_style.has_member("italic")) {
 			style.italic = json_style.get_boolean_member("italic");

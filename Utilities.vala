@@ -23,14 +23,6 @@ class Utilities {
 			alpha = ((color >> 24) & 0xFF) / 255.0
 		};
 	}
-
-	public static Pango.Weight convert_weight(int weight) {
-		switch (weight) {
-			case 400: return Pango.Weight.NORMAL;
-			case 700: return Pango.Weight.BOLD;
-			default: return Pango.Weight.NORMAL;
-		}
-	}
 }
 
 }
