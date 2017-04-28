@@ -17,6 +17,8 @@ namespace Xi {
 class Line {
 	private Pango.Layout layout;
 	private double[] cursors;
+	private Pango.AttrList text_attributes;
+	private uint[] selection_ranges;
 
 	public Line(Pango.Context context, string text, Pango.FontDescription font_description) {
 		layout = new Pango.Layout(context);
@@ -74,40 +76,76 @@ class Line {
 		attributes.change((owned)attribute);
 	}
 
+	private void apply_style_to_range(Pango.AttrList attributes, Style style, uint start, uint end) {
+		if (style.foreground != null) {
+			set_foreground(attributes, start, end, style.foreground);
+		}
+		if (style.background != null) {
+			set_background(attributes, start, end, style.background);
+		}
+		if (style.weight != null) {
+			set_weight(attributes, start, end, style.weight);
+		}
+		if (style.italic) {
+			set_italic(attributes, start, end);
+		}
+	}
+
 	public void set_styles(Json.Array styles) {
-		var attributes = new Pango.AttrList();
+		StyleMap style_map = StyleMap.get_instance();
+		selection_ranges = {};
+		text_attributes = new Pango.AttrList();
 		uint offset = 0;
 		for (int i = 0; i < styles.get_length(); i += 3) {
 			uint start = offset + (uint)styles.get_int_element(i);
 			uint end = start + (uint)styles.get_int_element(i+1);
-			int style_id = (int)styles.get_int_element(i+2);
-			Style style = StyleMap.get_instance().get_style(style_id);
-			if (style.foreground != null) {
-				set_foreground(attributes, start, end, style.foreground);
-			}
-			if (style.background != null) {
-				set_background(attributes, start, end, style.background);
-			}
-			if (style.weight != null) {
-				set_weight(attributes, start, end, style.weight);
-			}
-			if (style.italic) {
-				set_italic(attributes, start, end);
-			}
 			offset = end;
+
+			int style_id = (int)styles.get_int_element(i+2);
+
+			// add selections to selection array to defer conversion to Pango.AttrList until draw-time
+			if (style_id == 0) {
+				selection_ranges += start;
+				selection_ranges += end;
+				continue;
+			}
+
+			Style style = style_map.get_style(style_id);
+			apply_style_to_range(text_attributes, style, start, end);
 		}
-		layout.set_attributes(attributes);
 	}
 
-	public void draw(Cairo.Context cr, double x, double y, double width, double ascent, double line_height, bool draw_cursors) {
+	public void draw(Cairo.Context cr, Gtk.StyleContext style_ctx, double x, double y, double width, double ascent, double line_height, bool draw_cursors) {
+		var widget_state = style_ctx.get_state();
+		var selected_state = widget_state | Gtk.StateFlags.SELECTED;
+		// highlight line if it contains any cursors
 		if (cursors.length > 0) {
-			Gdk.cairo_set_source_rgba(cr, Utilities.convert_color(0xfff5f5f5u));
+			var color = style_ctx.get_background_color(selected_state);
+			color.alpha /= 2;
+			Gdk.cairo_set_source_rgba(cr, color);
 			cr.rectangle(0, y, width, line_height);
 			cr.fill();
 		}
-		Gdk.cairo_set_source_rgba(cr, Utilities.convert_color(0xff323232u));
 		cr.move_to(x, y + ascent);
+
+		// create a style for the selection
+		Style selected_style = Style() {
+			background = style_ctx.get_background_color(selected_state),
+			foreground = style_ctx.get_color(selected_state)
+		};
+		// merge selection with existing text attributes
+		var new_attributes = text_attributes.copy();
+		for (var i = 0; i < selection_ranges.length; i+=2) {
+			var start = selection_ranges[i];
+			var end = selection_ranges[i+1];
+			apply_style_to_range(new_attributes, selected_style, start, end);
+		}
+		// draw text
+		Gdk.cairo_set_source_rgba(cr, style_ctx.get_color(widget_state));
+		layout.set_attributes(new_attributes);
 		Pango.cairo_show_layout_line(cr, layout.get_line_readonly(0));
+
+		// draw cursors themselves
 		if (draw_cursors) {
 			foreach (double cursor in cursors) {
 				cr.rectangle(x + cursor, y, 1, line_height);

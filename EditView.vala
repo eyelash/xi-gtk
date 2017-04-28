@@ -33,6 +33,10 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public string label { private set; get; }
 	public bool has_unsaved_changes { private set; get; }
 
+	static construct {
+		set_css_name("xieditview");
+	}
+
 	// Gtk.Scrollable implementation
 	public Gtk.Adjustment hadjustment { construct set; get; }
 	public Gtk.ScrollablePolicy hscroll_policy { set; get; }
@@ -77,6 +81,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		can_focus = true;
 		set_has_window(true);
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
+		get_style_context().add_class("view");
+
 		if (file != null) {
 			label = file.get_basename();
 		} else {
@@ -117,12 +123,12 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public override bool draw(Cairo.Context cr) {
-		Gdk.cairo_set_source_rgba(cr, Utilities.convert_color(0xffffffffu));
-		cr.paint();
+		var style_ctx = get_style_context();
+		style_ctx.render_background(cr, 0, 0, get_allocated_width(), get_allocated_height());
 		for (int i = first_line; i < first_line + visible_lines; i++) {
 			var line = lines_cache.get_line(i);
 			if (line != null) {
-				line.draw(cr, padding, y_offset + (i - first_line) * line_height, get_allocated_width(), ascent, line_height, blinker.draw_cursor());
+				line.draw(cr, style_ctx, padding, y_offset + (i - first_line) * line_height, get_allocated_width(), ascent, line_height, blinker.draw_cursor());
 			}
 		}
 		return Gdk.EVENT_STOP;
