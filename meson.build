@@ -10,7 +10,6 @@ sources = [
 	'Notebook.vala',
 	'Style.vala',
 	'StyleMap.vala',
-	'TabLabel.vala',
 	'Utilities.vala',
 ]
 

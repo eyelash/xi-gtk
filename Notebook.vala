@@ -20,18 +20,40 @@ class Notebook: Gtk.Notebook {
 		set_scrollable(true);
 	}
 
-	public void add_edit_view(EditView edit_view) {
-		var scrolled_window = new Gtk.ScrolledWindow(null, null);
-		scrolled_window.add(edit_view);
-		var label = new TabLabel(edit_view);
-		label.close_clicked.connect((edit_view) => {
+	public Gtk.Box create_tab_label(EditView edit_view) {
+		var box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
+
+		var label = new Gtk.Label(edit_view.label);
+		edit_view.bind_property("label", label, "label");
+		box.set_center_widget(label);
+
+		var close_button = new Gtk.Button();
+		var close_image = new Gtk.Image.from_icon_name("window-close-symbolic", Gtk.IconSize.MENU);
+		close_button.add(close_image);
+		close_button.relief = Gtk.ReliefStyle.NONE;
+		close_button.focus_on_click = false;
+		close_button.clicked.connect(() => {
 			int index = page_num(edit_view.get_parent());
 			remove_page(index);
 		});
+		box.pack_end(close_button, false, true);
+
+		var image = new Gtk.Image.from_icon_name("media-record-symbolic", Gtk.IconSize.MENU);
+		edit_view.bind_property("has-unsaved-changes", image, "visible");
+		box.pack_end(image, false, true);
+
+		return box;
+	}
+
+	public void add_edit_view(EditView edit_view) {
+		var scrolled_window = new Gtk.ScrolledWindow(null, null);
+		scrolled_window.add(edit_view);
+		var label = create_tab_label(edit_view);
 		append_page(scrolled_window, label);
 		set_tab_reorderable(scrolled_window, true);
 		child_set_property(scrolled_window, "tab-expand", true);
-		show_all();
+		scrolled_window.show_all();
+		label.show_all();
 		set_current_page(page_num(scrolled_window));
 		edit_view.grab_focus();
 	}
