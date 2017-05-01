@@ -83,6 +83,36 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 	}
 
+	private static void add_move_binding(Gtk.BindingSet binding_set, uint key, Gdk.ModifierType modifier, string command) {
+		Gtk.BindingEntry.add_signal(binding_set, key, modifier, "send-edit", 1, typeof(string), command);
+		Gtk.BindingEntry.add_signal(binding_set, key, modifier|Gdk.ModifierType.SHIFT_MASK, "send-edit", 1, typeof(string), command + "_and_modify_selection");
+	}
+
+	static construct {
+		unowned Gtk.BindingSet binding_set = Gtk.BindingSet.by_class((ObjectClass)typeof(EditView).class_ref());
+		add_move_binding(binding_set, Gdk.Key.Right, 0, "move_right");
+		add_move_binding(binding_set, Gdk.Key.Right, Gdk.ModifierType.CONTROL_MASK, "move_word_right");
+		add_move_binding(binding_set, Gdk.Key.Left, 0, "move_left");
+		add_move_binding(binding_set, Gdk.Key.Left, Gdk.ModifierType.CONTROL_MASK, "move_word_left");
+		add_move_binding(binding_set, Gdk.Key.Up, 0, "move_up");
+		add_move_binding(binding_set, Gdk.Key.Down, 0, "move_down");
+		add_move_binding(binding_set, Gdk.Key.Home, 0, "move_to_left_end_of_line");
+		add_move_binding(binding_set, Gdk.Key.Home, Gdk.ModifierType.CONTROL_MASK, "move_to_beginning_of_document");
+		add_move_binding(binding_set, Gdk.Key.End, 0, "move_to_right_end_of_line");
+		add_move_binding(binding_set, Gdk.Key.End, Gdk.ModifierType.CONTROL_MASK, "move_to_end_of_document");
+		add_move_binding(binding_set, Gdk.Key.Page_Up, 0, "page_up");
+		add_move_binding(binding_set, Gdk.Key.Page_Down, 0, "page_down");
+
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Return, 0, "send-edit", 1, typeof(string), "insert_newline");
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Tab, 0, "send-edit", 1, typeof(string), "insert_tab");
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.BackSpace, 0, "send-edit", 1, typeof(string), "delete_backward");
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Delete, 0, "send-edit", 1, typeof(string), "delete_forward");
+
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.a, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "select_all");
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.z, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "undo");
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.y, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "redo");
+	}
+
 	~EditView() {
 		core_connection.send_close_view(view_id);
 	}
@@ -128,55 +158,18 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public override bool key_press_event(Gdk.EventKey event) {
-		if (im_context.filter_keypress(event)) {
+		if (base.key_press_event(event)) {
 			return Gdk.EVENT_STOP;
 		}
-		unowned string suffix = (event.state & Gdk.ModifierType.SHIFT_MASK) != 0 ? "_and_modify_selection" : "";
-		switch (event.keyval) {
-			case Gdk.Key.Return:
-				send_edit("insert_newline");
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.BackSpace:
-				send_edit("delete_backward");
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.Delete:
-				send_edit("delete_forward");
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.Tab:
-				send_edit("insert_tab");
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.Up:
-				send_edit("move_up" + suffix);
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.Right:
-				unowned string command = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0 ? "move_word_right" : "move_right";
-				send_edit(command + suffix);
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.Down:
-				send_edit("move_down" + suffix);
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.Left:
-				unowned string command = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0 ? "move_word_left" : "move_left";
-				send_edit(command + suffix);
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.Page_Up:
-				send_edit("page_up" + suffix);
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.Page_Down:
-				send_edit("page_down" + suffix);
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.Home:
-				unowned string command = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0 ? "move_to_beginning_of_document" : "move_to_left_end_of_line";
-				send_edit(command + suffix);
-				return Gdk.EVENT_STOP;
-			case Gdk.Key.End:
-				unowned string command = (event.state & Gdk.ModifierType.CONTROL_MASK) != 0 ? "move_to_end_of_document" : "move_to_right_end_of_line";
-				send_edit(command + suffix);
-				return Gdk.EVENT_STOP;
+		if (im_context.filter_keypress(event)) {
+			return Gdk.EVENT_STOP;
 		}
 		return Gdk.EVENT_PROPAGATE;
 	}
 	public override bool key_release_event(Gdk.EventKey event) {
+		if (base.key_release_event(event)) {
+			return Gdk.EVENT_STOP;
+		}
 		if (im_context.filter_keypress(event)) {
 			return Gdk.EVENT_STOP;
 		}
@@ -248,8 +241,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 	}
 
-	public void send_edit(string method, Json.Object edit_params = new Json.Object()) {
-		core_connection.send_edit(view_id, method, edit_params);
+	[Signal(action=true)]
+	public virtual signal void send_edit(string method) {
+		core_connection.send_edit(view_id, method, new Json.Object());
 	}
 
 	public void save() {
@@ -268,13 +262,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			core_connection.send_save(view_id, file.get_path());
 		}
 		dialog.destroy();
-	}
-
-	public void undo() {
-		core_connection.send_edit(view_id, "undo");
-	}
-	public void redo() {
-		core_connection.send_edit(view_id, "redo");
 	}
 }
 

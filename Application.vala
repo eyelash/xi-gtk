@@ -65,8 +65,6 @@ class Application: Gtk.Application {
 		});
 		add_accelerator("save", "<Control>S", () => notebook.get_current_edit_view().save());
 		add_accelerator("save-as", "<Control><Shift>S", () => notebook.get_current_edit_view().save_as());
-		add_accelerator("undo", "<Control>Z", () => notebook.get_current_edit_view().undo());
-		add_accelerator("redo", "<Control>Y", () => notebook.get_current_edit_view().redo());
 		add_accelerator("quit", "<Control>Q", () => window.close());
 		notebook = new Notebook();
 		window.add(notebook);
