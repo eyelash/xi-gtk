@@ -18,7 +18,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private File file;
 	private CoreConnection core_connection;
 	private Gtk.IMContext im_context;
-	private double ascent;
 	private double line_height;
 	private double char_width;
 
@@ -66,7 +65,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		var settings = new Settings("org.gnome.desktop.interface");
 		var font_description = Pango.FontDescription.from_string(settings.get_string("monospace-font-name"));
 		var metrics = get_pango_context().get_metrics(font_description, null);
-		ascent = Pango.units_to_double(metrics.get_ascent());
+		double ascent = Pango.units_to_double(metrics.get_ascent());
 		line_height = ascent + Pango.units_to_double(metrics.get_descent());
 		char_width = Pango.units_to_double(metrics.get_approximate_char_width());
 		padding = char_width;
@@ -122,7 +121,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		for (int i = first_line; i < first_line + visible_lines; i++) {
 			var line = lines_cache.get_line(i);
 			if (line != null) {
-				line.draw(cr, padding, y_offset + (i - first_line) * line_height, get_allocated_width(), ascent, line_height, blinker.draw_cursor());
+				line.draw(cr, padding, y_offset + (i - first_line) * line_height, get_allocated_width(), line_height, blinker.draw_cursor());
 			}
 		}
 		return Gdk.EVENT_STOP;
