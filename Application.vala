@@ -16,26 +16,10 @@ namespace Xi {
 
 class Application: Gtk.Application {
 	private CoreConnection core_connection;
-	private Gtk.ApplicationWindow window;
-	private Notebook notebook;
+	private Xi.Window window;
 
 	public Application() {
 		Object(application_id: "com.github.eyelash.xi-gtk", flags: ApplicationFlags.HANDLES_OPEN);
-	}
-
-	private delegate void ActionHandler();
-	private new void add_accelerator(string action_name, string accelerator, ActionHandler callback) {
-		var action = new SimpleAction(action_name, null);
-		action.activate.connect(() => callback());
-		window.add_action(action);
-		set_accels_for_action("win."+action_name, {accelerator});
-	}
-
-	private void add_new_tab(File? file = null) {
-		core_connection.send_new_view(file != null ? file.get_path() : null, (result) => {
-			string view_id = result.get_string();
-			notebook.add_edit_view(new EditView(view_id, file, core_connection));
-		});
 	}
 
 	public override void startup() {
@@ -45,39 +29,22 @@ class Application: Gtk.Application {
 		if (core_binary == null) {
 			core_binary = "xi-core";
 		}
-
 		core_connection = new CoreConnection({core_binary});
 		core_connection.def_style_received.connect((style) => {
 			StyleMap.get_instance().def_style(style);
 		});
-		window = new Gtk.ApplicationWindow(this);
-		window.set_default_size(600, 400);
-		add_accelerator("new", "<Control>N", () => add_new_tab());
-		add_accelerator("open", "<Control>O", () => {
-			var dialog = new Gtk.FileChooserDialog(null, window, Gtk.FileChooserAction.OPEN, "Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.ACCEPT);
-			dialog.select_multiple = true;
-			if (dialog.run() == Gtk.ResponseType.ACCEPT) {
-				foreach (var file in dialog.get_files()) {
-					add_new_tab(file);
-				}
-			}
-			dialog.destroy();
-		});
-		add_accelerator("save", "<Control>S", () => notebook.get_current_edit_view().save());
-		add_accelerator("save-as", "<Control><Shift>S", () => notebook.get_current_edit_view().save_as());
-		add_accelerator("quit", "<Control>Q", () => window.close());
-		notebook = new Notebook();
-		window.add(notebook);
+
+		window = new Xi.Window(this, core_connection);
 		window.show_all();
 	}
 
 	public override void activate() {
-		add_new_tab();
+		window.add_new_tab();
 	}
 
 	public override void open(File[] files, string hint) {
 		foreach (var file in files) {
-			add_new_tab(file);
+			window.add_new_tab(file);
 		}
 	}
 

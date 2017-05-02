@@ -11,6 +11,7 @@ sources = [
 	'Style.vala',
 	'StyleMap.vala',
 	'Utilities.vala',
+	'Window.vala',
 ]
 
 dependencies = [
