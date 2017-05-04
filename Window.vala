@@ -25,12 +25,14 @@ class Window: Gtk.ApplicationWindow {
 	construct {
 		set_default_size(600, 400);
 
-		var accel_group = new Gtk.AccelGroup();
-		accel_group.connect(Gdk.Key.N, Gdk.ModifierType.CONTROL_MASK, 0, () => {
+		// actions
+		var new_tab_action = new SimpleAction("new-tab", null);
+		new_tab_action.activate.connect(() => {
 			add_new_tab();
-			return true;
 		});
-		accel_group.connect(Gdk.Key.O, Gdk.ModifierType.CONTROL_MASK, 0, () => {
+		add_action(new_tab_action);
+		var open_action = new SimpleAction("open", null);
+		open_action.activate.connect(() => {
 			var dialog = new Gtk.FileChooserDialog(null, this, Gtk.FileChooserAction.OPEN, "Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.ACCEPT);
 			dialog.select_multiple = true;
 			if (dialog.run() == Gtk.ResponseType.ACCEPT) {
@@ -39,21 +41,18 @@ class Window: Gtk.ApplicationWindow {
 				}
 			}
 			dialog.destroy();
-			return true;
 		});
-		accel_group.connect(Gdk.Key.S, Gdk.ModifierType.CONTROL_MASK, 0, () => {
+		add_action(open_action);
+		var save_action = new SimpleAction("save", null);
+		save_action.activate.connect(() => {
 			notebook.get_current_edit_view().save();
-			return true;
 		});
-		accel_group.connect(Gdk.Key.S, Gdk.ModifierType.CONTROL_MASK|Gdk.ModifierType.SHIFT_MASK, 0, () => {
+		add_action(save_action);
+		var save_as_action = new SimpleAction("save-as", null);
+		save_as_action.activate.connect(() => {
 			notebook.get_current_edit_view().save_as();
-			return true;
 		});
-		accel_group.connect(Gdk.Key.Q, Gdk.ModifierType.CONTROL_MASK, 0, () => {
-			close();
-			return true;
-		});
-		add_accel_group(accel_group);
+		add_action(save_as_action);
 
 		notebook = new Xi.Notebook();
 		add(notebook);

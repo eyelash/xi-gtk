@@ -25,6 +25,20 @@ class Application: Gtk.Application {
 	public override void startup() {
 		base.startup();
 
+		var quit_action = new SimpleAction("quit", null);
+		quit_action.activate.connect(() => {
+			foreach (weak Gtk.Window window in get_windows()) {
+				window.close();
+			}
+		});
+		add_action(quit_action);
+
+		set_accels_for_action("win.new-tab", {"<Primary>N"});
+		set_accels_for_action("win.open", {"<Primary>O"});
+		set_accels_for_action("win.save", {"<Primary>S"});
+		set_accels_for_action("win.save-as", {"<Primary><Shift>S"});
+		set_accels_for_action("app.quit", {"<Primary>Q"});
+
 		unowned string core_binary = GLib.Environment.get_variable("XI_CORE");
 		if (core_binary == null) {
 			core_binary = "xi-core";
