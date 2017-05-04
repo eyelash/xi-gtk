@@ -135,6 +135,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			core_connection.send_scroll(view_id, first_line, first_line + visible_lines);
 		}
 		_vadjustment.page_size = allocation.height;
+		_vadjustment.upper = double.max(lines_cache.get_height() * line_height + 2 * padding, allocation.height);
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
 			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
 		}
@@ -221,7 +222,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public void update(string view_id, Json.Object update) {
 		if (view_id != this.view_id) return;
 		lines_cache.update(update);
-		_vadjustment.upper = lines_cache.get_height() * line_height + 2 * padding;
+		_vadjustment.upper = double.max(lines_cache.get_height() * line_height + 2 * padding, get_allocated_height());
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
 			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
 		}

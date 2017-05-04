@@ -42,6 +42,8 @@ class Notebook: Gtk.Notebook {
 		edit_view.bind_property("has-unsaved-changes", image, "visible");
 		box.pack_end(image, false, true);
 
+		label.show();
+		close_button.show_all();
 		return box;
 	}
 
@@ -53,7 +55,7 @@ class Notebook: Gtk.Notebook {
 		set_tab_reorderable(scrolled_window, true);
 		child_set_property(scrolled_window, "tab-expand", true);
 		scrolled_window.show_all();
-		label.show_all();
+		label.show();
 		set_current_page(page_num(scrolled_window));
 		edit_view.grab_focus();
 	}
