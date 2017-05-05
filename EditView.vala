@@ -186,7 +186,11 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		convert_xy(event.x, event.y, out line, out column);
 		switch (event.type) {
 			case Gdk.EventType.BUTTON_PRESS:
-				core_connection.send_click(view_id, line, column, 0, 1);
+				if ((event.state & Gdk.ModifierType.CONTROL_MASK) != 0) {
+					core_connection.send_gesture(view_id, line, column, "toggle_sel");
+				} else {
+					core_connection.send_click(view_id, line, column, 0, 1);
+				}
 				break;
 			case Gdk.EventType.2BUTTON_PRESS:
 				core_connection.send_click(view_id, line, column, 0, 2);

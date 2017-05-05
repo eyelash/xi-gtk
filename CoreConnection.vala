@@ -192,6 +192,14 @@ class CoreConnection {
 		send_edit_array(tab, "request_lines", params);
 	}*/
 
+	public void send_gesture(string view_id, int64 line, int64 col, string ty) {
+		var params = new Json.Object();
+		params.set_int_member("line", line);
+		params.set_int_member("col", col);
+		params.set_string_member("ty", ty);
+		send_edit(view_id, "gesture", params);
+	}
+
 	private static DataInputStream create_input_stream(int fd, owned PollableSourceFunc func) {
 		var stream = new UnixInputStream(fd, true);
 		var source = stream.create_source();
