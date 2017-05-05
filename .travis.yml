@@ -1,0 +1,11 @@
+language: generic
+
+services: [docker]
+
+install:
+  - docker create -v "$(pwd)":/tmp/xi-gtk -it --name xi-gtk-container debian:9
+  - docker start xi-gtk-container
+  - docker exec xi-gtk-container /bin/sh -c "apt-get -qq update && apt-get -qq install build-essential valac meson libgtk-3-dev libjson-glib-dev"
+
+script:
+  - docker exec xi-gtk-container /bin/sh -c "cd /tmp/xi-gtk && meson build && ninja -C build"
