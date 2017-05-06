@@ -122,11 +122,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		get_window().set_cursor(new Gdk.Cursor.for_display(get_display(), Gdk.CursorType.XTERM));
 	}
 
-	public override void unmap() {
-		blinker.stop();
-		base.unmap();
-	}
-
 	public override void size_allocate(Gtk.Allocation allocation) {
 		base.size_allocate(allocation);
 		int previous_visible_lines = visible_lines;
@@ -155,6 +150,15 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 				line.draw(cr, padding, y_offset + (i - first_line) * line_height, get_allocated_width(), line_height, blinker.draw_cursor());
 			}
 		}
+		return Gdk.EVENT_STOP;
+	}
+
+	public override bool focus_in_event(Gdk.EventFocus event) {
+		blinker.restart();
+		return Gdk.EVENT_STOP;
+	}
+	public override bool focus_out_event(Gdk.EventFocus event) {
+		blinker.stop();
 		return Gdk.EVENT_STOP;
 	}
 
