@@ -125,7 +125,10 @@ class Line {
 	public int x_to_index(double x) {
 		int index, trailing;
 		layout.get_line_readonly(0).x_to_index(Pango.units_from_double(x), out index, out trailing);
-		return index + trailing;
+		for (; trailing > 0; trailing--) {
+			layout.get_text().get_next_char(ref index, null);
+		}
+		return index;
 	}
 }
 
