@@ -58,7 +58,8 @@ Shortcut                                         | Command
 - [x] saving
 - [x] follow the cursor (respect the `scrollto` parameter)
 - [x] undo / redo
+- [x] copy / paste
 - [ ] line numbers
-- [ ] copy / paste
+- [ ] find / replace
 - [ ] i18n
 - [ ] preferences (font family, font size, etc.)

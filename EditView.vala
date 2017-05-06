@@ -111,6 +111,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.A, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "select_all");
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Z, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "undo");
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Y, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "redo");
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.C, Gdk.ModifierType.CONTROL_MASK, "copy", 0);
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.X, Gdk.ModifierType.CONTROL_MASK, "cut", 0);
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.V, Gdk.ModifierType.CONTROL_MASK, "paste", 0);
 	}
 
 	~EditView() {
@@ -253,6 +256,27 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	[Signal(action=true)]
 	public virtual signal void send_edit(string method) {
 		core_connection.send_edit(view_id, method, new Json.Object());
+	}
+
+	[Signal(action=true)]
+	public virtual signal void copy() {
+		core_connection.send_copy(view_id, (result) => {
+			get_clipboard(Gdk.SELECTION_CLIPBOARD).set_text(result.get_string(), -1);
+		});
+	}
+	[Signal(action=true)]
+	public virtual signal void cut() {
+		core_connection.send_cut(view_id, (result) => {
+			get_clipboard(Gdk.SELECTION_CLIPBOARD).set_text(result.get_string(), -1);
+		});
+	}
+	[Signal(action=true)]
+	public virtual signal void paste() {
+		get_clipboard(Gdk.SELECTION_CLIPBOARD).request_text((clipboard, text) => {
+			if (text != null) {
+				core_connection.send_insert(view_id, text);
+			}
+		});
 	}
 
 	public void save() {

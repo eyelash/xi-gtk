@@ -126,13 +126,13 @@ class CoreConnection {
 		send_notification("edit", params);
 	}
 
-	/*private void send_edit_request(string tab, string method, Json.Object edit_params, ResponseHandler response_handler) {
+	private void send_edit_request(string view_id, string method, Json.Object edit_params, ResponseHandler response_handler) {
 		var params = new Json.Object();
 		params.set_string_member("method", method);
-		params.set_string_member("tab", tab);
+		params.set_string_member("view_id", view_id);
 		params.set_object_member("params", edit_params);
 		send_request("edit", params, response_handler);
-	}*/
+	}
 
 	public void send_new_view(string? file_path, owned ResponseHandler.Delegate response_handler) {
 		var params = new Json.Object();
@@ -152,6 +152,14 @@ class CoreConnection {
 		var params = new Json.Object();
 		params.set_string_member("chars", chars);
 		send_edit(view_id, "insert", params);
+	}
+
+	public void send_copy(string view_id, owned ResponseHandler.Delegate response_handler) {
+		send_edit_request(view_id, "copy", new Json.Object(), new ResponseHandler((owned)response_handler));
+	}
+
+	public void send_cut(string view_id, owned ResponseHandler.Delegate response_handler) {
+		send_edit_request(view_id, "cut", new Json.Object(), new ResponseHandler((owned)response_handler));
 	}
 
 	public void send_save(string view_id, string file_path) {
