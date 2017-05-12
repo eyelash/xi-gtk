@@ -21,5 +21,6 @@ dependencies = [
 	meson.get_compiler('c').find_library('m')
 ]
 
+sources += import('gnome').compile_resources('resources', 'resources/gresource.xml', source_dir: 'resources')
 executable('xi-gtk', sources, dependencies: dependencies, install: true)
 install_data('com.github.eyelash.xi-gtk.desktop', install_dir: 'share/applications')

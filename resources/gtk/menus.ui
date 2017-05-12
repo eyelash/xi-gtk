@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+	<menu id="app-menu">
+		<section>
+			<item>
+				<attribute name="action">app.quit</attribute>
+				<attribute name="label">Quit</attribute>
+				<attribute name="accel">&lt;Primary&gt;Q</attribute>
+			</item>
+		</section>
+	</menu>
+</interface>
