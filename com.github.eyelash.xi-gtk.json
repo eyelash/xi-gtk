@@ -1,0 +1,61 @@
+{
+	"app-id": "com.github.eyelash.xi-gtk",
+	"runtime": "org.gnome.Platform",
+	"runtime-version": "3.24",
+	"sdk": "org.gnome.Sdk",
+	"command": "xi-gtk",
+	"finish-args": [
+		"--socket=x11",
+		"--socket=wayland",
+		"--filesystem=home"
+	],
+	"modules": [
+		{
+			"name": "xi-core",
+			"disabled": false,
+			"sources": [
+				{
+					"type": "git",
+					"url": "https://github.com/google/xi-editor",
+					"dest": "xi-editor"
+				},
+				{
+					"type": "archive",
+					"url": "https://static.rust-lang.org/dist/rust-1.17.0-x86_64-unknown-linux-gnu.tar.gz",
+					"sha256": "bbb0e249a7a3e8143b569706c7d2e7e5f51932c753b7fd26c58ccd2015b02c6b",
+					"only-arches": ["x86_64"],
+					"dest": "rust"
+				},
+				{
+					"type": "archive",
+					"url": "https://static.rust-lang.org/dist/rust-1.17.0-i686-unknown-linux-gnu.tar.gz",
+					"sha256": "39d16ce0f618ba37ee1024b83e4822a2d38e6ba9f341ff2020d34df94c7a6beb",
+					"only-arches": ["i686"],
+					"dest": "rust"
+				}
+			],
+			"buildsystem": "simple",
+			"build-options": {
+				"build-args": ["--share=network"]
+			},
+			"build-commands": [
+				"rust/install.sh --prefix=/app",
+				"cargo install --path xi-editor/rust --root /app"
+			],
+			"post-install": [
+				"/app/lib/rustlib/uninstall.sh"
+			]
+		},
+		{
+			"name": "xi-gtk",
+			"sources": [
+				{
+					"type": "git",
+					"url": "https://github.com/eyelash/xi-gtk"
+				}
+			],
+			"buildsystem": "meson",
+			"builddir": true
+		}
+	]
+}
