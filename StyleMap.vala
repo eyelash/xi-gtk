@@ -47,6 +47,9 @@ class StyleMap {
 		if (json_style.has_member("weight")) {
 			style.weight = (Pango.Weight)json_style.get_int_member("weight");
 		}
+		if (json_style.has_member("underline")) {
+			style.underline = json_style.get_boolean_member("underline");
+		}
 		if (json_style.has_member("italic")) {
 			style.italic = json_style.get_boolean_member("italic");
 		}

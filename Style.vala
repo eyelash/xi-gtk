@@ -18,6 +18,7 @@ struct Style {
 	Gdk.RGBA? foreground;
 	Gdk.RGBA? background;
 	Pango.Weight? weight;
+	bool underline;
 	bool italic;
 }
 

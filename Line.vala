@@ -60,12 +60,12 @@ class Line {
 		attributes.change((owned)attribute);
 	}
 
-	/*private static void set_underline(Pango.AttrList attributes, uint start_index, uint end_index) {
+	private static void set_underline(Pango.AttrList attributes, uint start_index, uint end_index) {
 		var attribute = Pango.attr_underline_new(Pango.Underline.SINGLE);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
 		attributes.change((owned)attribute);
-	}*/
+	}
 
 	private static void set_italic(Pango.AttrList attributes, uint start_index, uint end_index) {
 		var attribute = Pango.attr_style_new(Pango.Style.ITALIC);
@@ -90,6 +90,9 @@ class Line {
 			}
 			if (style.weight != null) {
 				set_weight(attributes, start, end, style.weight);
+			}
+			if (style.underline) {
+				set_underline(attributes, start, end);
 			}
 			if (style.italic) {
 				set_italic(attributes, start, end);
