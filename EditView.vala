@@ -262,13 +262,17 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	[Signal(action=true)]
 	public virtual signal void copy() {
 		core_connection.send_copy(view_id, (result) => {
-			get_clipboard(Gdk.SELECTION_CLIPBOARD).set_text(result.get_string(), -1);
+			if (!result.is_null()) {
+				get_clipboard(Gdk.SELECTION_CLIPBOARD).set_text(result.get_string(), -1);
+			}
 		});
 	}
 	[Signal(action=true)]
 	public virtual signal void cut() {
 		core_connection.send_cut(view_id, (result) => {
-			get_clipboard(Gdk.SELECTION_CLIPBOARD).set_text(result.get_string(), -1);
+			if (!result.is_null()) {
+				get_clipboard(Gdk.SELECTION_CLIPBOARD).set_text(result.get_string(), -1);
+			}
 		});
 	}
 	[Signal(action=true)]
