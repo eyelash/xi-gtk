@@ -58,8 +58,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		this.view_id = view_id;
 		this.file = file;
 		this.core_connection = core_connection;
-		core_connection.update_received.connect(update);
-		core_connection.scroll_to_received.connect(scroll_to);
+		core_connection.update_received[view_id].connect(update);
+		core_connection.scroll_to_received[view_id].connect(scroll_to);
 		im_context = new Gtk.IMMulticontext();
 		im_context.commit.connect(handle_commit);
 		var settings = new Settings("org.gnome.desktop.interface");
@@ -230,8 +230,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	// public interface
-	public void update(string view_id, Json.Object update) {
-		if (view_id != this.view_id) return;
+	public void update(Json.Object update) {
 		lines_cache.update(update);
 		_vadjustment.upper = double.max(lines_cache.get_height() * line_height + 2 * padding, get_allocated_height());
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
@@ -244,8 +243,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 	}
 
-	public void scroll_to(string view_id, int line, int col) {
-		if (view_id != this.view_id) return;
+	public void scroll_to(int line, int col) {
 		if ((line + 1) * line_height + 2 * padding > _vadjustment.value + get_allocated_height()) {
 			_vadjustment.value = (line + 1) * line_height + 2 * padding - get_allocated_height();
 		}

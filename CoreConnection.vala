@@ -31,8 +31,10 @@ class CoreConnection {
 	}
 	private HashTable<int, ResponseHandler> response_handlers;
 
-	public signal void update_received(string view_id, Json.Object update);
-	public signal void scroll_to_received(string view_id, int line, int col);
+	[Signal(detailed=true)]
+	public signal void update_received(Json.Object update);
+	[Signal(detailed=true)]
+	public signal void scroll_to_received(int line, int col);
 	public signal void def_style_received(Json.Object params);
 
 	private bool receive() {
@@ -59,13 +61,13 @@ class CoreConnection {
 						case "update":
 							var view_id = params.get_string_member("view_id");
 							var update = params.get_object_member("update");
-							update_received(view_id, update);
+							update_received[view_id](update);
 							break;
 						case "scroll_to":
 							var view_id = params.get_string_member("view_id");
 							var scroll_to_line = (int)params.get_int_member("line");
 							var scroll_to_col = (int)params.get_int_member("col");
-							scroll_to_received(view_id, scroll_to_line, scroll_to_col);
+							scroll_to_received[view_id](scroll_to_line, scroll_to_col);
 							break;
 						case "def_style":
 							def_style_received(params);
