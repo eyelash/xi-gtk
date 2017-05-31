@@ -15,6 +15,7 @@
 namespace Xi {
 
 class EditView: Gtk.DrawingArea, Gtk.Scrollable {
+	private string view_id;
 	private File file;
 	private CoreConnection core_connection;
 	private Gtk.IMContext im_context;
@@ -28,7 +29,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private int visible_lines;
 	private Blinker blinker;
 
-	public string view_id { private set; get; }
 	public string label { private set; get; }
 	public bool has_unsaved_changes { private set; get; }
 
