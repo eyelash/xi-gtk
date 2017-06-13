@@ -2,6 +2,8 @@
 
 [![Join the chat at https://gitter.im/eyelash/xi-gtk](https://badges.gitter.im/eyelash/xi-gtk.svg)](https://gitter.im/eyelash/xi-gtk)
 
+<img alt="screenshot" src="https://raw.githubusercontent.com/eyelash/xi-gtk/master/screenshot.png" srcset="https://raw.githubusercontent.com/eyelash/xi-gtk/master/screenshot@2x.png 2x">
+
 ![screenshot](https://raw.githubusercontent.com/eyelash/xi-gtk/master/screenshot.png)
 
 ## Instructions
