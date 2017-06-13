@@ -17,7 +17,8 @@ namespace Xi {
 class Notebook: Gtk.Notebook {
 
 	public Notebook() {
-		set_scrollable(true);
+		scrollable = true;
+		show_border = false;
 	}
 
 	public Gtk.Box create_tab_label(EditView edit_view) {

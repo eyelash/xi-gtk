@@ -54,6 +54,23 @@ class Window: Gtk.ApplicationWindow {
 		});
 		add_action(save_as_action);
 
+		var header_bar = new Gtk.HeaderBar();
+		header_bar.show_close_button = true;
+		header_bar.title = "Xi";
+		var new_button = new Gtk.Button.from_icon_name("document-new-symbolic", Gtk.IconSize.BUTTON);
+		new_button.tooltip_text = "New File";
+		new_button.action_name = "win.new-tab";
+		header_bar.pack_start(new_button);
+		var open_button = new Gtk.Button.from_icon_name("document-open-symbolic", Gtk.IconSize.BUTTON);
+		open_button.tooltip_text = "Open File";
+		open_button.action_name = "win.open";
+		header_bar.pack_start(open_button);
+		var save_button = new Gtk.Button.from_icon_name("document-save-symbolic", Gtk.IconSize.BUTTON);
+		save_button.tooltip_text = "Save File";
+		save_button.action_name = "win.save";
+		header_bar.pack_end(save_button);
+		set_titlebar(header_bar);
+
 		notebook = new Xi.Notebook();
 		add(notebook);
 	}
