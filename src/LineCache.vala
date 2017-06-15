@@ -14,14 +14,14 @@
 
 namespace Xi {
 
-class LinesCache {
+class LineCache {
 	private GenericArray<Line?> lines;
 	private int invalid_before;
 	private int invalid_after;
 	private Pango.Context context;
 	private Pango.FontDescription font_description;
 
-	public LinesCache(Pango.Context context, Pango.FontDescription font_description) {
+	public LineCache(Pango.Context context, Pango.FontDescription font_description) {
 		this.lines = new GenericArray<Line?>();
 		this.context = context;
 		this.font_description = font_description;

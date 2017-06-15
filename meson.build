@@ -1,17 +1,17 @@
 project('xi-gtk', 'vala', 'c')
 
 sources = [
-	'Application.vala',
-	'Blinker.vala',
-	'CoreConnection.vala',
-	'EditView.vala',
-	'Line.vala',
-	'LinesCache.vala',
-	'Notebook.vala',
-	'Style.vala',
-	'StyleMap.vala',
-	'Utilities.vala',
-	'Window.vala',
+	'src/Application.vala',
+	'src/Blinker.vala',
+	'src/CoreConnection.vala',
+	'src/EditView.vala',
+	'src/Line.vala',
+	'src/LineCache.vala',
+	'src/Notebook.vala',
+	'src/Style.vala',
+	'src/StyleMap.vala',
+	'src/Utilities.vala',
+	'src/Window.vala',
 ]
 
 dependencies = [

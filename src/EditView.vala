@@ -24,7 +24,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	private double padding;
 	private double y_offset;
-	private LinesCache lines_cache;
+	private LineCache line_cache;
 	private int first_line;
 	private int visible_lines;
 	private Blinker blinker;
@@ -50,7 +50,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	// private helper methods
 	private void convert_xy(double x, double y, out int line, out int column) {
 		line = int.max(0, (int)((y - y_offset) / line_height) + first_line);
-		var _line = lines_cache.get_line(line);
+		var _line = line_cache.get_line(line);
 		column = _line != null ? _line.x_to_index(x-padding) : 0;
 	}
 
@@ -70,7 +70,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		char_width = Pango.units_to_double(metrics.get_approximate_char_width());
 		padding = char_width;
 		y_offset = padding;
-		lines_cache = new LinesCache(get_pango_context(), font_description);
+		line_cache = new LineCache(get_pango_context(), font_description);
 		blinker = new Blinker(settings.get_int("cursor-blink-time") / 2);
 		blinker.redraw.connect(this.queue_draw);
 		can_focus = true;
@@ -133,14 +133,14 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			core_connection.send_scroll(view_id, first_line, first_line + visible_lines);
 		}
 		_vadjustment.page_size = allocation.height;
-		_vadjustment.upper = double.max(lines_cache.get_height() * line_height + 2 * padding, allocation.height);
+		_vadjustment.upper = double.max(line_cache.get_height() * line_height + 2 * padding, allocation.height);
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
 			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
 		}
 	}
 
 	public override void get_preferred_height(out int minimum_height, out int natural_height) {
-		minimum_height = (int)(lines_cache.get_height() * line_height);
+		minimum_height = (int)(line_cache.get_height() * line_height);
 		natural_height = minimum_height;
 	}
 
@@ -148,7 +148,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		Gdk.cairo_set_source_rgba(cr, Utilities.convert_color(0xffffffffu));
 		cr.paint();
 		for (int i = first_line; i < first_line + visible_lines; i++) {
-			var line = lines_cache.get_line(i);
+			var line = line_cache.get_line(i);
 			if (line != null) {
 				line.draw(cr, padding, y_offset + (i - first_line) * line_height, get_allocated_width(), line_height, blinker.draw_cursor());
 			}
@@ -234,8 +234,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	// public interface
 	public void update(Json.Object update) {
-		lines_cache.update(update);
-		_vadjustment.upper = double.max(lines_cache.get_height() * line_height + 2 * padding, get_allocated_height());
+		line_cache.update(update);
+		_vadjustment.upper = double.max(line_cache.get_height() * line_height + 2 * padding, get_allocated_height());
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
 			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
 		}
