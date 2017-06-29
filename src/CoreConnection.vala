@@ -36,6 +36,7 @@ class CoreConnection {
 	[Signal(detailed=true)]
 	public signal void scroll_to_received(int line, int col);
 	public signal void def_style_received(Json.Object params);
+	public signal void theme_changed_received(string name, Json.Object theme);
 
 	private bool receive() {
 		try {
@@ -71,6 +72,11 @@ class CoreConnection {
 							break;
 						case "def_style":
 							def_style_received(params);
+							break;
+						case "theme_changed":
+							var name = params.get_string_member("name");
+							var theme = params.get_object_member("theme");
+							theme_changed_received(name, theme);
 							break;
 					}
 				}
@@ -169,6 +175,12 @@ class CoreConnection {
 		params.set_string_member("view_id", view_id);
 		params.set_string_member("file_path", file_path);
 		send_notification("save", params);
+	}
+
+	public void send_set_theme(string theme_name) {
+		var params = new Json.Object();
+		params.set_string_member("theme_name", theme_name);
+		send_notification("set_theme", params);
 	}
 
 	public void send_scroll(string view_id, int64 first_line, int64 last_line) {

@@ -103,15 +103,17 @@ class Line {
 	}
 
 	public void draw(Cairo.Context cr, double x, double y, double width, double line_height, bool draw_cursors) {
+		Theme theme = Theme.get_instance();
 		if (cursors.length > 0) {
-			Gdk.cairo_set_source_rgba(cr, Utilities.convert_color(0xfff5f5f5u));
+			Gdk.cairo_set_source_rgba(cr, theme.line_highlight);
 			cr.rectangle(0, y, width, line_height);
 			cr.fill();
 		}
-		Gdk.cairo_set_source_rgba(cr, Utilities.convert_color(0xff323232u));
+		Gdk.cairo_set_source_rgba(cr, theme.foreground);
 		cr.move_to(x, y);
 		Pango.cairo_show_layout(cr, layout);
 		if (draw_cursors) {
+			Gdk.cairo_set_source_rgba(cr, theme.caret);
 			foreach (double cursor in cursors) {
 				cr.rectangle(x + cursor, y, 1, line_height);
 				cr.fill();

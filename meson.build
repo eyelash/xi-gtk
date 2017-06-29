@@ -10,6 +10,7 @@ sources = [
 	'src/Notebook.vala',
 	'src/Style.vala',
 	'src/StyleMap.vala',
+	'src/Theme.vala',
 	'src/Utilities.vala',
 	'src/Window.vala',
 ]

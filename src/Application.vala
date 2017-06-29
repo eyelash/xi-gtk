@@ -46,6 +46,14 @@ class Application: Gtk.Application {
 		core_connection.def_style_received.connect((style) => {
 			StyleMap.get_instance().def_style(style);
 		});
+		core_connection.theme_changed_received.connect((name, theme) => {
+			Theme.get_instance().set_from_json(theme);
+		});
+		unowned string theme = GLib.Environment.get_variable("XI_THEME");
+		if (theme == null) {
+			theme = "InspiredGitHub";
+		}
+		core_connection.send_set_theme(theme);
 
 		window = new Xi.Window(this, core_connection);
 		window.show_all();

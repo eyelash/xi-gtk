@@ -27,10 +27,6 @@ class StyleMap {
 
 	public StyleMap() {
 		map = new GenericArray<Style?>();
-		// style id 0: selection
-		map.add(Style() {
-			background = Utilities.convert_color(0xfff8eec7u)
-		});
 	}
 
 	public void def_style(Json.Object json_style) {
@@ -64,7 +60,14 @@ class StyleMap {
 	}
 
 	public Style get_style(int id) {
-		return map[id];
+		switch (id) {
+			case 0:
+				return Style() {
+					background = Theme.get_instance().selection
+				};
+			default:
+				return map[id];
+		}
 	}
 }
 
