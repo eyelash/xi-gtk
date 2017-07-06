@@ -2,5 +2,6 @@
 Type=Application
 Name=Xi
 Icon=accessories-text-editor
+DBusActivatable=true
 Exec=xi-gtk %F
 Terminal=false

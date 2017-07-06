@@ -24,4 +24,7 @@ dependencies = [
 
 sources += import('gnome').compile_resources('resources', 'resources/gresource.xml', source_dir: 'resources')
 executable('xi-gtk', sources, dependencies: dependencies, install: true)
-install_data('com.github.eyelash.xi-gtk.desktop', install_dir: 'share/applications')
+configuration = configuration_data()
+configuration.set('bindir', join_paths(get_option('prefix'), get_option('bindir')))
+install_data('com.github.eyelash.xi-gtk.desktop', install_dir: join_paths(get_option('datadir'), 'applications'))
+configure_file(input: 'com.github.eyelash.xi-gtk.service.in', output: 'com.github.eyelash.xi-gtk.service', configuration: configuration, install_dir: join_paths(get_option('datadir'), 'dbus-1', 'services'))
