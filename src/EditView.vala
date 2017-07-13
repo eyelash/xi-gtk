@@ -103,12 +103,16 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		add_move_binding(binding_set, Gdk.Key.Page_Up, 0, "page_up");
 		add_move_binding(binding_set, Gdk.Key.Page_Down, 0, "page_down");
 
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Up, Gdk.ModifierType.MOD1_MASK | Gdk.ModifierType.SHIFT_MASK, "send-edit", 1, typeof(string), "add_selection_above");
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Down, Gdk.ModifierType.MOD1_MASK | Gdk.ModifierType.SHIFT_MASK, "send-edit", 1, typeof(string), "add_selection_below");
+
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Return, 0, "send-edit", 1, typeof(string), "insert_newline");
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Tab, 0, "send-edit", 1, typeof(string), "insert_tab");
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.BackSpace, 0, "send-edit", 1, typeof(string), "delete_backward");
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Delete, 0, "send-edit", 1, typeof(string), "delete_forward");
 
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.A, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "select_all");
+		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.T, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "transpose");
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Z, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "undo");
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Y, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "redo");
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.C, Gdk.ModifierType.CONTROL_MASK, "copy", 0);
