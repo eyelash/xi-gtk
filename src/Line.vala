@@ -16,12 +16,16 @@ namespace Xi {
 
 class Line {
 	private Pango.Layout layout;
+	private Pango.Layout number;
 	private double[] cursors;
 
-	public Line(Pango.Context context, string text, Pango.FontDescription font_description) {
+	public Line(Pango.Context context, Pango.FontDescription font_description, string text, uint number) {
 		layout = new Pango.Layout(context);
 		layout.set_text(text, -1);
 		layout.set_font_description(font_description);
+		this.number = new Pango.Layout(context);
+		this.number.set_text("%u".printf(number), -1);
+		this.number.set_font_description(font_description);
 	}
 
 	public void set_cursors(Json.Array json_cursors) {
@@ -119,6 +123,14 @@ class Line {
 				cr.fill();
 			}
 		}
+	}
+
+	public void draw_gutter(Cairo.Context cr, double x, double y) {
+		Gdk.cairo_set_source_rgba(cr, Theme.get_instance().gutter_foreground);
+		Pango.Rectangle extents;
+		number.get_pixel_extents(null, out extents);
+		cr.move_to(x - extents.width, y);
+		Pango.cairo_show_layout(cr, number);
 	}
 
 	public double index_to_x(int index) {

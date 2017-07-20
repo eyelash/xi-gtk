@@ -23,6 +23,15 @@ class Utilities {
 			alpha = ((color >> 24) & 0xFF) / 255.0
 		};
 	}
+
+	public static int get_digits(uint number) {
+		int result = 1;
+		while (number >= 10) {
+			result++;
+			number /= 10;
+		}
+		return result;
+	}
 }
 
 }

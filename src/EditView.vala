@@ -27,6 +27,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private LineCache line_cache;
 	private int first_line;
 	private int visible_lines;
+	private double gutter_width;
 	private Blinker blinker;
 
 	public string label { private set; get; }
@@ -51,7 +52,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private void convert_xy(double x, double y, out int line, out int column) {
 		line = int.max(0, (int)((y - y_offset) / line_height) + first_line);
 		var _line = line_cache.get_line(line);
-		column = _line != null ? _line.x_to_index(x-padding) : 0;
+		column = _line != null ? _line.x_to_index(x - (padding + gutter_width + 2 * char_width)) : 0;
 	}
 
 	public EditView(string view_id, File? file, CoreConnection core_connection) {
@@ -154,7 +155,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		for (int i = first_line; i < first_line + visible_lines; i++) {
 			var line = line_cache.get_line(i);
 			if (line != null) {
-				line.draw(cr, padding, y_offset + (i - first_line) * line_height, get_allocated_width(), line_height, blinker.draw_cursor());
+				double y = y_offset + (i - first_line) * line_height;
+				line.draw(cr, padding + gutter_width + 2 * char_width, y, get_allocated_width(), line_height, blinker.draw_cursor());
+				line.draw_gutter(cr, padding + gutter_width, y);
 			}
 		}
 		return Gdk.EVENT_STOP;
@@ -243,6 +246,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
 			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
 		}
+		gutter_width = Utilities.get_digits(line_cache.get_height()) * char_width;
 		blinker.restart();
 		queue_draw();
 		if (update.has_member("pristine")) {

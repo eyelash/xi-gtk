@@ -21,6 +21,8 @@ class Theme {
 	public Gdk.RGBA caret;
 	public Gdk.RGBA line_highlight;
 	public Gdk.RGBA selection;
+	public Gdk.RGBA gutter;
+	public Gdk.RGBA gutter_foreground;
 
 	public static Theme get_instance() {
 		if (instance == null) {
@@ -29,7 +31,14 @@ class Theme {
 		return instance;
 	}
 
-	private static Gdk.RGBA decode_color(Json.Object color) {
+	private static Gdk.RGBA decode_color(Json.Object theme, string color_name) {
+		if (!theme.has_member(color_name)) {
+			return Gdk.RGBA();
+		}
+		var color = theme.get_object_member(color_name);
+		if (color == null) {
+			return Gdk.RGBA();
+		}
 		int64 r = color.get_int_member("r");
 		int64 g = color.get_int_member("g");
 		int64 b = color.get_int_member("b");
@@ -42,22 +51,14 @@ class Theme {
 		};
 	}
 
-	public void set_from_json(Json.Object json) {
-		if (json.has_member("foreground")) {
-			foreground = decode_color(json.get_object_member("foreground"));
-		}
-		if (json.has_member("background")) {
-			background = decode_color(json.get_object_member("background"));
-		}
-		if (json.has_member("caret")) {
-			caret = decode_color(json.get_object_member("caret"));
-		}
-		if (json.has_member("line_highlight")) {
-			line_highlight = decode_color(json.get_object_member("line_highlight"));
-		}
-		if (json.has_member("selection")) {
-			selection = decode_color(json.get_object_member("selection"));
-		}
+	public void set_from_json(Json.Object theme) {
+		foreground = decode_color(theme, "foreground");
+		background = decode_color(theme, "background");
+		caret = decode_color(theme, "caret");
+		line_highlight = decode_color(theme, "line_highlight");
+		selection = decode_color(theme, "selection");
+		gutter = decode_color(theme, "gutter");
+		gutter_foreground = decode_color(theme, "gutter_foreground");
 	}
 }
 

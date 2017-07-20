@@ -85,7 +85,7 @@ class LineCache {
 					for (int j = 0; j < json_lines.get_length(); j++) {
 						var json_line = json_lines.get_object_element(j);
 						var text = json_line.get_string_member("text");
-						var line = new Line(context, text, font_description);
+						var line = new Line(context, font_description, text, new_invalid_before + new_lines.length + new_invalid_after + 1);
 						if (json_line.has_member("cursor")) {
 							line.set_cursors(json_line.get_array_member("cursor"));
 						}
