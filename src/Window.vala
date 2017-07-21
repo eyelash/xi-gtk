@@ -23,7 +23,7 @@ class Window: Gtk.ApplicationWindow {
 	}
 
 	construct {
-		set_default_size(600, 400);
+		set_default_size(800, 550);
 
 		// actions
 		var new_tab_action = new SimpleAction("new-tab", null);
