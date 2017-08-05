@@ -38,9 +38,15 @@ class Application: Gtk.Application {
 		set_accels_for_action("win.save", {"<Primary>S"});
 		set_accels_for_action("win.save-as", {"<Primary><Shift>S"});
 
-		unowned string core_binary = GLib.Environment.get_variable("XI_CORE");
+		string core_binary = GLib.Environment.get_variable("XI_CORE");
+		string home_directory = GLib.Environment.get_variable("HOME");
 		if (core_binary == null) {
-			core_binary = "xi-core";
+			if (home_directory == null) {
+				core_binary = "xi-core";
+			} else {
+				core_binary = home_directory + "/.cargo/bin/xi-core";
+			}
+
 		}
 		core_connection = new CoreConnection({core_binary});
 		core_connection.def_style_received.connect((style) => {
