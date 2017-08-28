@@ -49,6 +49,7 @@ class Application: Gtk.Application {
 		core_connection.theme_changed_received.connect((name, theme) => {
 			Theme.get_instance().set_from_json(theme);
 		});
+		core_connection.send_client_started();
 		unowned string theme = GLib.Environment.get_variable("XI_THEME");
 		if (theme == null) {
 			theme = "InspiredGitHub";

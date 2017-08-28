@@ -78,6 +78,9 @@ class CoreConnection {
 							var theme = params.get_object_member("theme");
 							theme_changed_received(name, theme);
 							break;
+						case "available_themes":
+							// TODO: implement
+							break;
 					}
 				}
 			} while (core_stdout.get_available() > 0);
@@ -140,6 +143,10 @@ class CoreConnection {
 		params.set_string_member("view_id", view_id);
 		params.set_object_member("params", edit_params);
 		send_request("edit", params, response_handler);
+	}
+
+	public void send_client_started() {
+		send_notification("client_started", new Json.Object());
 	}
 
 	public void send_new_view(string? file_path, owned ResponseHandler.Delegate response_handler) {
