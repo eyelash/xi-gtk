@@ -49,21 +49,20 @@ class Notebook: Gtk.Notebook {
 	}
 
 	public void add_edit_view(EditView edit_view) {
-		var scrolled_window = new Gtk.ScrolledWindow(null, null);
-		scrolled_window.add(edit_view);
+		var container = new EditViewContainer(edit_view);
 		var label = create_tab_label(edit_view);
-		append_page(scrolled_window, label);
-		set_tab_reorderable(scrolled_window, true);
-		child_set_property(scrolled_window, "tab-expand", true);
-		scrolled_window.show_all();
+		append_page(container, label);
+		set_tab_reorderable(container, true);
+		child_set_property(container, "tab-expand", true);
+		container.show();
 		label.show();
-		set_current_page(page_num(scrolled_window));
-		edit_view.grab_focus();
+		set_current_page(page_num(container));
+		container.grab_focus();
 	}
 
-	public unowned EditView get_current_edit_view() {
+	public unowned EditViewContainer get_current_edit_view() {
 		int index = get_current_page();
-		return (get_nth_page(index) as Gtk.Bin).get_child() as EditView;
+		return get_nth_page(index) as EditViewContainer;
 	}
 
 	public override void grab_focus() {

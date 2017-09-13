@@ -53,6 +53,11 @@ class Window: Gtk.ApplicationWindow {
 			notebook.get_current_edit_view().save_as();
 		});
 		add_action(save_as_action);
+		var find_action = new SimpleAction("find", null);
+		find_action.activate.connect(() => {
+			notebook.get_current_edit_view().show_find_bar();
+		});
+		add_action(find_action);
 
 		var header_bar = new Gtk.HeaderBar();
 		header_bar.show_close_button = true;

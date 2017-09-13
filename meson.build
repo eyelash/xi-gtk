@@ -5,6 +5,8 @@ sources = [
 	'src/Blinker.vala',
 	'src/CoreConnection.vala',
 	'src/EditView.vala',
+	'src/EditViewContainer.vala',
+	'src/FindBar.vala',
 	'src/Line.vala',
 	'src/LineCache.vala',
 	'src/Notebook.vala',
