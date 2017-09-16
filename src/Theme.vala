@@ -23,6 +23,8 @@ class Theme {
 	public Gdk.RGBA selection;
 	public Gdk.RGBA gutter;
 	public Gdk.RGBA gutter_foreground;
+	public Gdk.RGBA find_highlight;
+	public Gdk.RGBA find_highlight_foreground;
 
 	public static Theme get_instance() {
 		if (instance == null) {
@@ -59,6 +61,8 @@ class Theme {
 		selection = decode_color(theme, "selection");
 		gutter = decode_color(theme, "gutter");
 		gutter_foreground = decode_color(theme, "gutter_foreground");
+		find_highlight = decode_color(theme, "find_highlight");
+		find_highlight_foreground = decode_color(theme, "find_highlight_foreground");
 	}
 }
 

@@ -15,13 +15,13 @@
 namespace Xi {
 
 class EditViewContainer: Gtk.Box {
-	private Xi.EditView edit_view;
-	private Xi.FindBar find_bar;
+	private EditView edit_view;
+	private FindBar find_bar;
 
 	public EditViewContainer(EditView edit_view) {
 		Object(orientation: Gtk.Orientation.VERTICAL);
 		this.edit_view = edit_view;
-		find_bar = new FindBar();
+		find_bar = new FindBar(edit_view);
 		find_bar.hide.connect(() => {
 			edit_view.grab_focus();
 		});

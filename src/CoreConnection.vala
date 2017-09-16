@@ -229,6 +229,24 @@ class CoreConnection {
 		send_edit(view_id, "gesture", params);
 	}
 
+	public void send_find(string view_id, string chars, bool case_sensitive, owned ResponseHandler.Delegate response_handler) {
+		var params = new Json.Object();
+		params.set_string_member("chars", chars);
+		params.set_boolean_member("case_sensitive", case_sensitive);
+		send_edit_request(view_id, "find", params, new ResponseHandler((owned)response_handler));
+	}
+	public void send_find_next(string view_id, bool wrap_around, bool allow_same) {
+		var params = new Json.Object();
+		params.set_boolean_member("wrap_around", wrap_around);
+		params.set_boolean_member("allow_same", allow_same);
+		send_edit(view_id, "find_next", params);
+	}
+	public void send_find_previous(string view_id, bool wrap_around) {
+		var params = new Json.Object();
+		params.set_boolean_member("wrap_around", wrap_around);
+		send_edit(view_id, "find_previous", params);
+	}
+
 	private static DataInputStream create_input_stream(int fd, owned PollableSourceFunc func) {
 		var stream = new UnixInputStream(fd, true);
 		var source = stream.create_source();

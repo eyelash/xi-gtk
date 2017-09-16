@@ -310,6 +310,16 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 		dialog.destroy();
 	}
+
+	public void find(string chars) {
+		core_connection.send_find(view_id, chars, false, () => {});
+	}
+	public void find_next() {
+		core_connection.send_find_next(view_id, true, false);
+	}
+	public void find_previous() {
+		core_connection.send_find_previous(view_id, true);
+	}
 }
 
 }

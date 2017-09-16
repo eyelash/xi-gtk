@@ -65,6 +65,11 @@ class StyleMap {
 				return Style() {
 					background = Theme.get_instance().selection
 				};
+			case 1:
+				return Style() {
+					foreground = Theme.get_instance().find_highlight_foreground,
+					background = Theme.get_instance().find_highlight
+				};
 			default:
 				return map[id];
 		}

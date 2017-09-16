@@ -15,26 +15,26 @@
 namespace Xi {
 
 class FindBar: Gtk.ActionBar {
+	private EditView edit_view;
 	private Gtk.Entry entry;
 
-	construct {
+	public FindBar(EditView edit_view) {
+		this.edit_view = edit_view;
 		entry = new Gtk.Entry();
 		entry.hexpand = true;
-		entry.activate.connect(find);
+		entry.changed.connect(() => edit_view.find(entry.text));
+		entry.activate.connect(edit_view.find_next);
 		pack_start(entry);
 		var find_button = new Gtk.Button.with_label("Find");
-		find_button.clicked.connect(find);
+		find_button.clicked.connect(edit_view.find_next);
 		pack_start(find_button);
 		var find_prev_button = new Gtk.Button.with_label("Find Prev");
+		find_prev_button.clicked.connect(edit_view.find_previous);
 		pack_start(find_prev_button);
-		var close_button = new Gtk.Button.from_icon_name("window-close-symbolic");
+		var close_button = new Gtk.Button.from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON);
 		close_button.relief = Gtk.ReliefStyle.NONE;
 		close_button.clicked.connect(() => hide());
 		pack_start(close_button);
-	}
-
-	private void find() {
-		stdout.printf("find %s\n", entry.text);
 	}
 
 	public override bool key_press_event(Gdk.EventKey event) {
