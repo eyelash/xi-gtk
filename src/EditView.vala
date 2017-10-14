@@ -19,6 +19,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private File file;
 	private CoreConnection core_connection;
 	private Gtk.IMContext im_context;
+	private double ascent;
 	private double line_height;
 	private double char_width;
 
@@ -66,7 +67,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		var settings = new Settings("org.gnome.desktop.interface");
 		var font_description = Pango.FontDescription.from_string(settings.get_string("monospace-font-name"));
 		var metrics = get_pango_context().get_metrics(font_description, null);
-		double ascent = Pango.units_to_double(metrics.get_ascent());
+		ascent = Pango.units_to_double(metrics.get_ascent());
 		line_height = ascent + Pango.units_to_double(metrics.get_descent());
 		char_width = Pango.units_to_double(metrics.get_approximate_char_width());
 		padding = char_width;
@@ -156,8 +157,12 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			var line = line_cache.get_line(i);
 			if (line != null) {
 				double y = y_offset + (i - first_line) * line_height;
-				line.draw(cr, padding + gutter_width + 2 * char_width, y, get_allocated_width(), line_height, blinker.draw_cursor());
-				line.draw_gutter(cr, padding + gutter_width, y);
+				line.draw_background(cr, y, get_allocated_width(), line_height);
+				line.draw(cr, padding + gutter_width + 2 * char_width, y, ascent);
+				if (blinker.draw_cursor()) {
+					line.draw_cursors(cr, padding + gutter_width + 2 * char_width, y, line_height);
+				}
+				line.draw_gutter(cr, padding + gutter_width, y, ascent);
 			}
 		}
 		return Gdk.EVENT_STOP;

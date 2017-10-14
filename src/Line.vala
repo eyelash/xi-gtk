@@ -106,31 +106,34 @@ class Line {
 		layout.set_attributes(attributes);
 	}
 
-	public void draw(Cairo.Context cr, double x, double y, double width, double line_height, bool draw_cursors) {
-		Theme theme = Theme.get_instance();
+	public void draw_background(Cairo.Context cr, double y, double width, double line_height) {
 		if (cursors.length > 0) {
-			Gdk.cairo_set_source_rgba(cr, theme.line_highlight);
+			Gdk.cairo_set_source_rgba(cr, Theme.get_instance().line_highlight);
 			cr.rectangle(0, y, width, line_height);
 			cr.fill();
 		}
-		Gdk.cairo_set_source_rgba(cr, theme.foreground);
-		cr.move_to(x, y);
-		Pango.cairo_show_layout(cr, layout);
-		if (draw_cursors) {
-			Gdk.cairo_set_source_rgba(cr, theme.caret);
-			foreach (double cursor in cursors) {
-				cr.rectangle(x + cursor, y, 1, line_height);
-				cr.fill();
-			}
+	}
+
+	public void draw(Cairo.Context cr, double x, double y, double ascent) {
+		Gdk.cairo_set_source_rgba(cr, Theme.get_instance().foreground);
+		cr.move_to(x, y + ascent);
+		Pango.cairo_show_layout_line(cr, layout.get_line_readonly(0));
+	}
+
+	public void draw_cursors(Cairo.Context cr, double x, double y, double line_height) {
+		Gdk.cairo_set_source_rgba(cr, Theme.get_instance().caret);
+		foreach (double cursor in cursors) {
+			cr.rectangle(x + cursor, y, 1, line_height);
+			cr.fill();
 		}
 	}
 
-	public void draw_gutter(Cairo.Context cr, double x, double y) {
+	public void draw_gutter(Cairo.Context cr, double x, double y, double ascent) {
 		Gdk.cairo_set_source_rgba(cr, Theme.get_instance().gutter_foreground);
 		Pango.Rectangle extents;
-		number.get_pixel_extents(null, out extents);
-		cr.move_to(x - extents.width, y);
-		Pango.cairo_show_layout(cr, number);
+		number.get_line_readonly(0).get_pixel_extents(null, out extents);
+		cr.move_to(x - extents.width, y + ascent);
+		Pango.cairo_show_layout_line(cr, number.get_line_readonly(0));
 	}
 
 	public double index_to_x(int index) {
