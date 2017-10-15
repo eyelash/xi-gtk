@@ -39,43 +39,43 @@ class Line {
 		var attribute = Pango.attr_foreground_new((uint16)(color.red*uint16.MAX), (uint16)(color.green*uint16.MAX), (uint16)(color.blue*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		attributes.change((owned)attribute);
+		attributes.insert((owned)attribute);
 		attribute = Pango.attr_foreground_alpha_new((uint16)(color.alpha*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		attributes.change((owned)attribute);
+		attributes.insert((owned)attribute);
 	}
 
 	private static void set_background(Pango.AttrList attributes, uint start_index, uint end_index, Gdk.RGBA color) {
 		var attribute = Pango.attr_background_new((uint16)(color.red*uint16.MAX), (uint16)(color.green*uint16.MAX), (uint16)(color.blue*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		attributes.change((owned)attribute);
+		attributes.insert((owned)attribute);
 		attribute = Pango.attr_background_alpha_new((uint16)(color.alpha*uint16.MAX));
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		attributes.change((owned)attribute);
+		attributes.insert((owned)attribute);
 	}
 
 	private static void set_weight(Pango.AttrList attributes, uint start_index, uint end_index, Pango.Weight weight) {
 		var attribute = Pango.attr_weight_new(weight);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		attributes.change((owned)attribute);
+		attributes.insert((owned)attribute);
 	}
 
 	private static void set_underline(Pango.AttrList attributes, uint start_index, uint end_index) {
 		var attribute = Pango.attr_underline_new(Pango.Underline.SINGLE);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		attributes.change((owned)attribute);
+		attributes.insert((owned)attribute);
 	}
 
 	private static void set_italic(Pango.AttrList attributes, uint start_index, uint end_index) {
 		var attribute = Pango.attr_style_new(Pango.Style.ITALIC);
 		attribute.start_index = start_index;
 		attribute.end_index = end_index;
-		attributes.change((owned)attribute);
+		attributes.insert((owned)attribute);
 	}
 
 	public void set_styles(Json.Array styles) {
