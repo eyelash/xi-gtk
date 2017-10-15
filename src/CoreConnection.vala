@@ -85,7 +85,7 @@ class CoreConnection {
 				}
 			} while (core_stdout.get_available() > 0);
 		} catch (Error error) {
-			stderr.printf("error: %s\n", error.message);
+			critical(error.message);
 		}
 		return true;
 	}
@@ -263,7 +263,7 @@ class CoreConnection {
 			core_stdin = new UnixOutputStream(core_stdin_fd, true);
 			core_stdout = create_input_stream(core_stdout_fd, receive);
 		} catch (SpawnError error) {
-			stderr.printf("spawn error: %s\n", error.message);
+			critical(error.message);
 		}
 	}
 }

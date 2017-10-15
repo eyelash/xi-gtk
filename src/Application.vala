@@ -16,10 +16,13 @@ namespace Xi {
 
 class Application: Gtk.Application {
 	private CoreConnection core_connection;
-	private Xi.Window window;
 
 	public Application() {
 		Object(application_id: "com.github.eyelash.xi-gtk", flags: ApplicationFlags.HANDLES_OPEN);
+	}
+
+	private unowned Xi.Window get_current_window() {
+		return get_active_window() as Xi.Window;
 	}
 
 	public override void startup() {
@@ -57,17 +60,17 @@ class Application: Gtk.Application {
 		}
 		core_connection.send_set_theme(theme);
 
-		window = new Xi.Window(this, core_connection);
+		var window = new Xi.Window(this, core_connection);
 		window.show_all();
 	}
 
 	public override void activate() {
-		window.add_new_tab();
+		get_current_window().add_new_tab();
 	}
 
 	public override void open(File[] files, string hint) {
 		foreach (var file in files) {
-			window.add_new_tab(file);
+			get_current_window().add_new_tab(file);
 		}
 	}
 
