@@ -301,7 +301,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		});
 	}
 
-	public void paste_primary() {
+	private void paste_primary() {
 		get_clipboard(Gdk.SELECTION_PRIMARY).request_text((clipboard, text) => {
 			if (text != null) {
 				core_connection.send_insert(view_id, text);
