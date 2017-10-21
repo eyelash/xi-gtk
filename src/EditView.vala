@@ -212,6 +212,9 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 					core_connection.send_gesture(view_id, line, column, "toggle_sel");
 				} else {
 					core_connection.send_click(view_id, line, column, 0, 1);
+					if (event.button == Gdk.BUTTON_MIDDLE) {
+						paste_primary();
+					}
 				}
 				break;
 			case Gdk.EventType.2BUTTON_PRESS:
@@ -292,6 +295,14 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	[Signal(action=true)]
 	public virtual signal void paste() {
 		get_clipboard(Gdk.SELECTION_CLIPBOARD).request_text((clipboard, text) => {
+			if (text != null) {
+				core_connection.send_insert(view_id, text);
+			}
+		});
+	}
+
+	private void paste_primary() {
+		get_clipboard(Gdk.SELECTION_PRIMARY).request_text((clipboard, text) => {
 			if (text != null) {
 				core_connection.send_insert(view_id, text);
 			}
