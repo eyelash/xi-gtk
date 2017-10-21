@@ -212,7 +212,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 					core_connection.send_gesture(view_id, line, column, "toggle_sel");
 				} else {
 					core_connection.send_click(view_id, line, column, 0, 1);
-					if (event.button == 2) {
+					if (event.button == Gdk.BUTTON_MIDDLE) {
 						paste_primary();
 					}
 				}
