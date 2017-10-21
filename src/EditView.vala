@@ -102,8 +102,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		add_move_binding(binding_set, Gdk.Key.Home, Gdk.ModifierType.CONTROL_MASK, "move_to_beginning_of_document");
 		add_move_binding(binding_set, Gdk.Key.End, 0, "move_to_right_end_of_line");
 		add_move_binding(binding_set, Gdk.Key.End, Gdk.ModifierType.CONTROL_MASK, "move_to_end_of_document");
-		add_move_binding(binding_set, Gdk.Key.Page_Up, 0, "page_up");
-		add_move_binding(binding_set, Gdk.Key.Page_Down, 0, "page_down");
+		add_move_binding(binding_set, Gdk.Key.Page_Up, 0, "scroll_page_up");
+		add_move_binding(binding_set, Gdk.Key.Page_Down, 0, "scroll_page_down");
 
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Up, Gdk.ModifierType.MOD1_MASK | Gdk.ModifierType.SHIFT_MASK, "send-edit", 1, typeof(string), "add_selection_above");
 		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Down, Gdk.ModifierType.MOD1_MASK | Gdk.ModifierType.SHIFT_MASK, "send-edit", 1, typeof(string), "add_selection_below");
