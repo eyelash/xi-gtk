@@ -25,8 +25,16 @@ class Application: Gtk.Application {
 		return get_active_window() as Xi.Window;
 	}
 
+	private void load_css(string resource_path) {
+		var css_provider = new Gtk.CssProvider();
+		css_provider.load_from_resource(resource_path);
+		Gtk.StyleContext.add_provider_for_screen(Gdk.Screen.get_default(), css_provider, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION);
+	}
+
 	public override void startup() {
 		base.startup();
+
+		load_css("/com/github/eyelash/xi-gtk/bindings.css");
 
 		var quit_action = new SimpleAction("quit", null);
 		quit_action.activate.connect(() => {

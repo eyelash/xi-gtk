@@ -78,48 +78,12 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		can_focus = true;
 		set_has_window(true);
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
+		get_style_context().add_class("xi-edit-view");
 		if (file != null) {
 			label = file.get_basename();
 		} else {
 			label = "untitled";
 		}
-	}
-
-	private static void add_move_binding(Gtk.BindingSet binding_set, uint key, Gdk.ModifierType modifier, string command) {
-		Gtk.BindingEntry.add_signal(binding_set, key, modifier, "send-edit", 1, typeof(string), command);
-		Gtk.BindingEntry.add_signal(binding_set, key, modifier|Gdk.ModifierType.SHIFT_MASK, "send-edit", 1, typeof(string), command + "_and_modify_selection");
-	}
-
-	static construct {
-		unowned Gtk.BindingSet binding_set = Gtk.BindingSet.by_class((ObjectClass)typeof(EditView).class_ref());
-		add_move_binding(binding_set, Gdk.Key.Right, 0, "move_right");
-		add_move_binding(binding_set, Gdk.Key.Right, Gdk.ModifierType.CONTROL_MASK, "move_word_right");
-		add_move_binding(binding_set, Gdk.Key.Left, 0, "move_left");
-		add_move_binding(binding_set, Gdk.Key.Left, Gdk.ModifierType.CONTROL_MASK, "move_word_left");
-		add_move_binding(binding_set, Gdk.Key.Up, 0, "move_up");
-		add_move_binding(binding_set, Gdk.Key.Down, 0, "move_down");
-		add_move_binding(binding_set, Gdk.Key.Home, 0, "move_to_left_end_of_line");
-		add_move_binding(binding_set, Gdk.Key.Home, Gdk.ModifierType.CONTROL_MASK, "move_to_beginning_of_document");
-		add_move_binding(binding_set, Gdk.Key.End, 0, "move_to_right_end_of_line");
-		add_move_binding(binding_set, Gdk.Key.End, Gdk.ModifierType.CONTROL_MASK, "move_to_end_of_document");
-		add_move_binding(binding_set, Gdk.Key.Page_Up, 0, "scroll_page_up");
-		add_move_binding(binding_set, Gdk.Key.Page_Down, 0, "scroll_page_down");
-
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Up, Gdk.ModifierType.MOD1_MASK | Gdk.ModifierType.SHIFT_MASK, "send-edit", 1, typeof(string), "add_selection_above");
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Down, Gdk.ModifierType.MOD1_MASK | Gdk.ModifierType.SHIFT_MASK, "send-edit", 1, typeof(string), "add_selection_below");
-
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Return, 0, "send-edit", 1, typeof(string), "insert_newline");
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Tab, 0, "send-edit", 1, typeof(string), "insert_tab");
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.BackSpace, 0, "send-edit", 1, typeof(string), "delete_backward");
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Delete, 0, "send-edit", 1, typeof(string), "delete_forward");
-
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.A, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "select_all");
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.T, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "transpose");
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Z, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "undo");
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.Y, Gdk.ModifierType.CONTROL_MASK, "send-edit", 1, typeof(string), "redo");
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.C, Gdk.ModifierType.CONTROL_MASK, "copy", 0);
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.X, Gdk.ModifierType.CONTROL_MASK, "cut", 0);
-		Gtk.BindingEntry.add_signal(binding_set, Gdk.Key.V, Gdk.ModifierType.CONTROL_MASK, "paste", 0);
 	}
 
 	~EditView() {

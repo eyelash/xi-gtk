@@ -1,0 +1,45 @@
+@binding-set xi-edit-view-bindings {
+	bind "Right"                 { "send-edit"("move_right") };
+	bind "<Shift>Right"          { "send-edit"("move_right_and_modify_selection") };
+	bind "<Control>Right"        { "send-edit"("move_word_right") };
+	bind "<Control><Shift>Right" { "send-edit"("move_word_right_and_modify_selection") };
+	bind "Left"                  { "send-edit"("move_left") };
+	bind "<Shift>Left"           { "send-edit"("move_left_and_modify_selection") };
+	bind "<Control>Left"         { "send-edit"("move_word_left") };
+	bind "<Control><Shift>Left"  { "send-edit"("move_word_left_and_modify_selection") };
+	bind "Up"                    { "send-edit"("move_up") };
+	bind "<Shift>Up"             { "send-edit"("move_up_and_modify_selection") };
+	bind "Down"                  { "send-edit"("move_down") };
+	bind "<Shift>Down"           { "send-edit"("move_down_and_modify_selection") };
+	bind "Home"                  { "send-edit"("move_to_left_end_of_line") };
+	bind "<Shift>Home"           { "send-edit"("move_to_left_end_of_line_and_modify_selection") };
+	bind "<Control>Home"         { "send-edit"("move_to_beginning_of_document") };
+	bind "<Control><Shift>Home"  { "send-edit"("move_to_beginning_of_document_and_modify_selection") };
+	bind "End"                   { "send-edit"("move_to_right_end_of_line") };
+	bind "<Shift>End"            { "send-edit"("move_to_right_end_of_line_and_modify_selection") };
+	bind "<Control>End"          { "send-edit"("move_to_end_of_document") };
+	bind "<Control><Shift>End"   { "send-edit"("move_to_end_of_document_and_modify_selection") };
+	bind "Page_Up"               { "send-edit"("scroll_page_up") };
+	bind "<Shift>Page_Up"        { "send-edit"("page_up_and_modify_selection") };
+	bind "Page_Down"             { "send-edit"("scroll_page_down") };
+	bind "<Shift>Page_Down"      { "send-edit"("page_down_and_modify_selection") };
+	bind "<Alt><Shift>Up"        { "send-edit"("add_selection_above") };
+	bind "<Alt><Shift>Down"      { "send-edit"("add_selection_below") };
+
+	bind "Return"    { "send-edit"("insert_newline") };
+	bind "Tab"       { "send-edit"("insert_tab") };
+	bind "BackSpace" { "send-edit"("delete_backward") };
+	bind "Delete"    { "send-edit"("delete_forward") };
+
+	bind "<Primary>A" { "send-edit"("select_all") };
+	bind "<Primary>T" { "send-edit"("transpose") };
+	bind "<Primary>Z" { "send-edit"("undo") };
+	bind "<Primary>Y" { "send-edit"("redo") };
+	bind "<Primary>C" { "copy"() };
+	bind "<Primary>X" { "cut"() };
+	bind "<Primary>V" { "paste"() };
+}
+
+.xi-edit-view {
+	-gtk-key-bindings: xi-edit-view-bindings;
+}
