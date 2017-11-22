@@ -15,9 +15,15 @@
 namespace Xi {
 
 class Line {
+	struct Background {
+		double x;
+		double width;
+		Gdk.RGBA color;
+	}
 	private Pango.Layout layout;
 	private Pango.Layout number;
 	private double[] cursors;
+	private GenericArray<Background?> backgrounds;
 
 	public Line(Pango.Context context, Pango.FontDescription font_description, string text, uint number) {
 		layout = new Pango.Layout(context);
@@ -46,17 +52,6 @@ class Line {
 		attributes.insert((owned)attribute);
 	}
 
-	private static void set_background(Pango.AttrList attributes, uint start_index, uint end_index, Gdk.RGBA color) {
-		var attribute = Pango.attr_background_new((uint16)(color.red*uint16.MAX), (uint16)(color.green*uint16.MAX), (uint16)(color.blue*uint16.MAX));
-		attribute.start_index = start_index;
-		attribute.end_index = end_index;
-		attributes.insert((owned)attribute);
-		attribute = Pango.attr_background_alpha_new((uint16)(color.alpha*uint16.MAX));
-		attribute.start_index = start_index;
-		attribute.end_index = end_index;
-		attributes.insert((owned)attribute);
-	}
-
 	private static void set_weight(Pango.AttrList attributes, uint start_index, uint end_index, Pango.Weight weight) {
 		var attribute = Pango.attr_weight_new(weight);
 		attribute.start_index = start_index;
@@ -79,6 +74,7 @@ class Line {
 	}
 
 	public void set_styles(Json.Array styles) {
+		backgrounds = new GenericArray<Background?>();
 		var attributes = new Pango.AttrList();
 		uint offset = 0;
 		for (int i = 0; i < styles.get_length(); i += 3) {
@@ -90,7 +86,13 @@ class Line {
 				set_foreground(attributes, start, end, style.foreground);
 			}
 			if (style.background != null) {
-				set_background(attributes, start, end, style.background);
+				double x = index_to_x((int)start);
+				double width = index_to_x((int)end) - x;
+				backgrounds.add(Background() {
+					x = x,
+					width = width,
+					color = style.background
+				});
 			}
 			if (style.weight != null) {
 				set_weight(attributes, start, end, style.weight);
@@ -106,10 +108,15 @@ class Line {
 		layout.set_attributes(attributes);
 	}
 
-	public void draw_background(Cairo.Context cr, double y, double width, double line_height) {
+	public void draw_background(Cairo.Context cr, double x, double y, double width, double line_height) {
 		if (cursors.length > 0) {
 			Gdk.cairo_set_source_rgba(cr, Theme.get_instance().line_highlight);
 			cr.rectangle(0, y, width, line_height);
+			cr.fill();
+		}
+		for (int i = 0; i < backgrounds.length; i++) {
+			Gdk.cairo_set_source_rgba(cr, backgrounds[i].color);
+			cr.rectangle(x + backgrounds[i].x, y, backgrounds[i].width, line_height);
 			cr.fill();
 		}
 	}

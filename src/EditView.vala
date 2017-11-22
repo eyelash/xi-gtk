@@ -121,7 +121,13 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			var line = line_cache.get_line(i);
 			if (line != null) {
 				double y = y_offset + (i - first_line) * line_height;
-				line.draw_background(cr, y, get_allocated_width(), line_height);
+				line.draw_background(cr, padding + gutter_width + 2 * char_width, y, get_allocated_width(), line_height);
+			}
+		}
+		for (int i = first_line; i < first_line + visible_lines; i++) {
+			var line = line_cache.get_line(i);
+			if (line != null) {
+				double y = y_offset + (i - first_line) * line_height;
 				line.draw(cr, padding + gutter_width + 2 * char_width, y, ascent);
 				if (blinker.draw_cursor()) {
 					line.draw_cursors(cr, padding + gutter_width + 2 * char_width, y, line_height);
