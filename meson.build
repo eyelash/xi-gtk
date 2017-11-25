@@ -1,4 +1,4 @@
-project('xi-gtk', 'vala', 'c')
+project('xi-gtk', 'vala', 'c', meson_version: '>= 0.37.0')
 
 sources = [
 	'src/Application.vala',
@@ -18,7 +18,7 @@ sources = [
 ]
 
 dependencies = [
-	dependency('gtk+-3.0', version: '>=3.18.0'),
+	dependency('gtk+-3.0', version: '>= 3.20.0'),
 	dependency('json-glib-1.0'),
 	dependency('gio-unix-2.0'),
 	meson.get_compiler('c').find_library('m')

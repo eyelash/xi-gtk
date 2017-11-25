@@ -171,7 +171,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public override bool button_press_event(Gdk.EventButton event) {
-		if (!has_focus) {
+		if (focus_on_click && !has_focus) {
 			grab_focus();
 		}
 		int line, column;
