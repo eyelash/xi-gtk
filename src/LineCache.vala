@@ -96,7 +96,6 @@ class LineCache {
 					}
 					break;
 				case "update":
-					stdout.printf("op: update\n");
 					var json_lines = op.get_array_member("lines");
 					for (int j = 0; j < json_lines.get_length(); j++) {
 						var json_line = json_lines.get_object_element(j);

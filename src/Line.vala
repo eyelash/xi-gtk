@@ -79,8 +79,8 @@ class Line {
 		uint offset = 0;
 		for (int i = 0; i < styles.get_length(); i += 3) {
 			uint start = offset + (uint)styles.get_int_element(i);
-			uint end = start + (uint)styles.get_int_element(i+1);
-			int style_id = (int)styles.get_int_element(i+2);
+			uint end = start + (uint)styles.get_int_element(i + 1);
+			int style_id = (int)styles.get_int_element(i + 2);
 			Style style = StyleMap.get_instance().get_style(style_id);
 			if (style.foreground != null) {
 				set_foreground(attributes, start, end, style.foreground);

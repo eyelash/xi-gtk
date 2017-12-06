@@ -241,12 +241,12 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 	}
 
-	[Signal(action=true)]
+	[Signal(action = true)]
 	public virtual signal void send_edit(string method) {
 		core_connection.send_edit(view_id, method, new Json.Object());
 	}
 
-	[Signal(action=true)]
+	[Signal(action = true)]
 	public virtual signal void copy() {
 		core_connection.send_copy(view_id, (result) => {
 			if (!result.is_null()) {
@@ -254,7 +254,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			}
 		});
 	}
-	[Signal(action=true)]
+	[Signal(action = true)]
 	public virtual signal void cut() {
 		core_connection.send_cut(view_id, (result) => {
 			if (!result.is_null()) {
@@ -262,7 +262,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			}
 		});
 	}
-	[Signal(action=true)]
+	[Signal(action = true)]
 	public virtual signal void paste() {
 		get_clipboard(Gdk.SELECTION_CLIPBOARD).request_text((clipboard, text) => {
 			if (text != null) {

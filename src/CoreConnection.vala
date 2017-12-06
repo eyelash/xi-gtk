@@ -31,9 +31,9 @@ class CoreConnection {
 	}
 	private HashTable<int, ResponseHandler> response_handlers;
 
-	[Signal(detailed=true)]
+	[Signal(detailed = true)]
 	public signal void update_received(Json.Object update);
-	[Signal(detailed=true)]
+	[Signal(detailed = true)]
 	public signal void scroll_to_received(int line, int col);
 	public signal void def_style_received(Json.Object params);
 	public signal void theme_changed_received(string name, Json.Object theme);
