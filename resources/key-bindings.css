@@ -30,6 +30,7 @@
 	bind "Tab"       { "send-edit"("insert_tab") };
 	bind "BackSpace" { "send-edit"("delete_backward") };
 	bind "Delete"    { "send-edit"("delete_forward") };
+	bind "Escape"    { "send-edit"("cancel_operation") };
 
 	bind "<Primary>A" { "send-edit"("select_all") };
 	bind "<Primary>T" { "send-edit"("transpose") };
