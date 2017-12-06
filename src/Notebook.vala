@@ -21,7 +21,7 @@ class Notebook: Gtk.Notebook {
 		show_border = false;
 	}
 
-	public Gtk.Box create_tab_label(EditView edit_view) {
+	private Gtk.Box create_tab_label(EditView edit_view, EditViewContainer container) {
 		var box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
 
 		var label = new Gtk.Label(edit_view.label);
@@ -34,7 +34,7 @@ class Notebook: Gtk.Notebook {
 		close_button.relief = Gtk.ReliefStyle.NONE;
 		close_button.focus_on_click = false;
 		close_button.clicked.connect(() => {
-			int index = page_num(edit_view.get_parent());
+			int index = page_num(container);
 			remove_page(index);
 		});
 		box.pack_end(close_button, false, true);
@@ -50,7 +50,7 @@ class Notebook: Gtk.Notebook {
 
 	public void add_edit_view(EditView edit_view) {
 		var container = new EditViewContainer(edit_view);
-		var label = create_tab_label(edit_view);
+		var label = create_tab_label(edit_view, container);
 		append_page(container, label);
 		set_tab_reorderable(container, true);
 		child_set_property(container, "tab-expand", true);
