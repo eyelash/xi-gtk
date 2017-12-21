@@ -23,7 +23,7 @@ class EditViewContainer: Gtk.Box {
 		this.edit_view = edit_view;
 		find_bar = new FindBar(edit_view);
 		find_bar.hide.connect(() => {
-			edit_view.grab_focus();
+			this.edit_view.grab_focus();
 		});
 		var scrolled_window = new Gtk.ScrolledWindow(null, null);
 		scrolled_window.add(edit_view);
