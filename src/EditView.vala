@@ -139,10 +139,12 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public override bool focus_in_event(Gdk.EventFocus event) {
+		im_context.focus_in();
 		blinker.restart();
 		return Gdk.EVENT_STOP;
 	}
 	public override bool focus_out_event(Gdk.EventFocus event) {
+		im_context.focus_out();
 		blinker.stop();
 		return Gdk.EVENT_STOP;
 	}
