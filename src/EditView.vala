@@ -92,6 +92,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	public override void realize() {
 		base.realize();
+		im_context.set_client_window(get_window());
 		get_window().set_cursor(new Gdk.Cursor.for_display(get_display(), Gdk.CursorType.XTERM));
 	}
 
