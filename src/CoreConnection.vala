@@ -34,7 +34,7 @@ class CoreConnection {
 	[Signal(detailed = true)]
 	public signal void update_received(Json.Object update);
 	[Signal(detailed = true)]
-	public signal void scroll_to_received(int line, int col);
+	public signal void scroll_to_received(int64 line, int64 col);
 	public signal void def_style_received(Json.Object params);
 	public signal void theme_changed_received(string name, Json.Object theme);
 
@@ -66,8 +66,8 @@ class CoreConnection {
 							break;
 						case "scroll_to":
 							var view_id = params.get_string_member("view_id");
-							var scroll_to_line = (int)params.get_int_member("line");
-							var scroll_to_col = (int)params.get_int_member("col");
+							int64 scroll_to_line = params.get_int_member("line");
+							int64 scroll_to_col = params.get_int_member("col");
 							scroll_to_received[view_id](scroll_to_line, scroll_to_col);
 							break;
 						case "def_style":

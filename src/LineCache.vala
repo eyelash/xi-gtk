@@ -16,8 +16,8 @@ namespace Xi {
 
 class LineCache {
 	private GenericArray<Line?> lines;
-	private int invalid_before;
-	private int invalid_after;
+	private int64 invalid_before;
+	private int64 invalid_after;
 	private Pango.Context context;
 	private Pango.FontDescription font_description;
 
@@ -27,7 +27,7 @@ class LineCache {
 		this.font_description = font_description;
 	}
 
-	private static void add_invalid(GenericArray<Line?> lines, ref int invalid_before, ref int invalid_after, int n) {
+	private static void add_invalid(GenericArray<Line?> lines, ref int64 invalid_before, ref int64 invalid_after, int64 n) {
 		if (lines.length == 0) {
 			invalid_before += n;
 		} else {
@@ -35,7 +35,7 @@ class LineCache {
 		}
 	}
 
-	private static void add_line(GenericArray<Line?> lines, ref int invalid_before, ref int invalid_after, Line? line) {
+	private static void add_line(GenericArray<Line?> lines, ref int64 invalid_before, ref int64 invalid_after, Line? line) {
 		if (line != null) {
 			for (int i = 0; i < invalid_after; i++) {
 				lines.add(null);
@@ -50,22 +50,23 @@ class LineCache {
 	public void update(Json.Object update) {
 		var ops = update.get_array_member("ops");
 		var new_lines = new GenericArray<Line?>();
-		int new_invalid_before = 0;
-		int new_invalid_after = 0;
-		int index = 0;
+		int64 new_invalid_before = 0;
+		int64 new_invalid_after = 0;
+		int64 index = 0;
 		for (int i = 0; i < ops.get_length(); i++) {
 			var op = ops.get_object_element(i);
 			switch (op.get_string_member("op")) {
 				case "copy":
-					int n = (int)op.get_int_member("n");
+					int64 n = op.get_int_member("n");
 					if (index < invalid_before) {
-						int invalid = int.min(n, invalid_before - index);
+						int64 invalid = int64.min(n, invalid_before - index);
 						add_invalid(new_lines, ref new_invalid_before, ref new_invalid_after, invalid);
 						n -= invalid;
 						index += invalid;
 					}
 					while (n > 0 && index < invalid_before + lines.length) {
-						add_line(new_lines, ref new_invalid_before, ref new_invalid_after, lines[index-invalid_before]);
+						var line = lines[(uint)(index - invalid_before)];
+						add_line(new_lines, ref new_invalid_before, ref new_invalid_after, line);
 						n--;
 						index++;
 					}
@@ -73,11 +74,11 @@ class LineCache {
 					index += n;
 					break;
 				case "skip":
-					int n = (int)op.get_int_member("n");
+					int64 n = op.get_int_member("n");
 					index += n;
 					break;
 				case "invalidate":
-					int n = (int)op.get_int_member("n");
+					int64 n = op.get_int_member("n");
 					add_invalid(new_lines, ref new_invalid_before, ref new_invalid_after, n);
 					break;
 				case "ins":
@@ -99,7 +100,7 @@ class LineCache {
 					var json_lines = op.get_array_member("lines");
 					for (int j = 0; j < json_lines.get_length(); j++) {
 						var json_line = json_lines.get_object_element(j);
-						var line = lines[index-invalid_before];
+						var line = lines[(uint)(index - invalid_before)];
 						if (json_line.has_member("cursor")) {
 							line.set_cursors(json_line.get_array_member("cursor"));
 						}
@@ -117,15 +118,15 @@ class LineCache {
 		invalid_after = new_invalid_after;
 	}
 
-	public int get_height() {
+	public int64 get_height() {
 		return invalid_before + lines.length + invalid_after;
 	}
 
-	public Line? get_line(int index) {
+	public Line? get_line(int64 index) {
 		if (index < invalid_before || index >= invalid_before + lines.length) {
 			return null;
 		}
-		return lines[index - invalid_before];
+		return lines[(uint)(index - invalid_before)];
 	}
 }
 

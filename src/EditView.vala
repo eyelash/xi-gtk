@@ -26,7 +26,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private double padding;
 	private double y_offset;
 	private LineCache line_cache;
-	private int first_line;
+	private int64 first_line;
 	private int visible_lines;
 	private double gutter_width;
 	private Blinker blinker;
@@ -50,8 +50,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public Gtk.ScrollablePolicy vscroll_policy { set; get; }
 
 	// private helper methods
-	private void convert_xy(double x, double y, out int line, out int column) {
-		line = int.max(0, (int)((y - y_offset) / line_height) + first_line);
+	private void convert_xy(double x, double y, out int64 line, out int64 column) {
+		line = int64.max(0, (int64)((y - y_offset) / line_height) + first_line);
 		var _line = line_cache.get_line(line);
 		column = _line != null ? _line.x_to_index(x - (padding + gutter_width + 2 * char_width)) : 0;
 	}
@@ -118,14 +118,14 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public override bool draw(Cairo.Context cr) {
 		Gdk.cairo_set_source_rgba(cr, Theme.get_instance().background);
 		cr.paint();
-		for (int i = first_line; i < first_line + visible_lines; i++) {
+		for (int64 i = first_line; i < first_line + visible_lines; i++) {
 			var line = line_cache.get_line(i);
 			if (line != null) {
 				double y = y_offset + (i - first_line) * line_height;
 				line.draw_background(cr, padding + gutter_width + 2 * char_width, y, get_allocated_width(), line_height);
 			}
 		}
-		for (int i = first_line; i < first_line + visible_lines; i++) {
+		for (int64 i = first_line; i < first_line + visible_lines; i++) {
 			var line = line_cache.get_line(i);
 			if (line != null) {
 				double y = y_offset + (i - first_line) * line_height;
@@ -177,7 +177,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		if (focus_on_click && !has_focus) {
 			grab_focus();
 		}
-		int line, column;
+		int64 line, column;
 		convert_xy(event.x, event.y, out line, out column);
 		switch (event.type) {
 			case Gdk.EventType.BUTTON_PRESS:
@@ -203,7 +203,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		return Gdk.EVENT_STOP;
 	}
 	public override bool motion_notify_event(Gdk.EventMotion event) {
-		int line, column;
+		int64 line, column;
 		convert_xy(event.x, event.y, out line, out column);
 		core_connection.send_drag(view_id, line, column, 0);
 		return Gdk.EVENT_STOP;
@@ -211,8 +211,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	private void scroll() {
 		double value = _vadjustment.value - padding;
-		int previous_first_line = first_line;
-		first_line = int.max(0, (int)(value / line_height));
+		uint64 previous_first_line = first_line;
+		first_line = int64.max(0, (int64)(value / line_height));
 		if (first_line != previous_first_line) {
 			core_connection.send_scroll(view_id, first_line, first_line + visible_lines);
 		}
@@ -235,7 +235,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 	}
 
-	public void scroll_to(int line, int col) {
+	public void scroll_to(int64 line, int64 col) {
 		if ((line + 1) * line_height + 2 * padding > _vadjustment.value + get_allocated_height()) {
 			_vadjustment.value = (line + 1) * line_height + 2 * padding - get_allocated_height();
 		}

@@ -25,12 +25,12 @@ class Line {
 	private double[] cursors;
 	private GenericArray<Background?> backgrounds;
 
-	public Line(Pango.Context context, Pango.FontDescription font_description, string text, uint number) {
+	public Line(Pango.Context context, Pango.FontDescription font_description, string text, int64 number) {
 		layout = new Pango.Layout(context);
 		layout.set_text(text, -1);
 		layout.set_font_description(font_description);
 		this.number = new Pango.Layout(context);
-		this.number.set_text("%u".printf(number), -1);
+		this.number.set_text(number.to_string(), -1);
 		this.number.set_font_description(font_description);
 	}
 

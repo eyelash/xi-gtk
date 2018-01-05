@@ -24,7 +24,7 @@ class Utilities {
 		};
 	}
 
-	public static int get_digits(uint number) {
+	public static int get_digits(int64 number) {
 		int result = 1;
 		while (number >= 10) {
 			result++;
