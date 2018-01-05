@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Elias Aebi
+// Copyright 2016-2018 Elias Aebi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -145,8 +145,10 @@ class CoreConnection {
 		send_request("edit", params, response_handler);
 	}
 
-	public void send_client_started() {
-		send_notification("client_started", new Json.Object());
+	public void send_client_started(string config_dir) {
+		var params = new Json.Object();
+		params.set_string_member("config_dir", config_dir);
+		send_notification("client_started", params);
 	}
 
 	public void send_new_view(string? file_path, owned ResponseHandler.Delegate response_handler) {

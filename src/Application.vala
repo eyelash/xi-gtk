@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Elias Aebi
+// Copyright 2016-2018 Elias Aebi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -61,7 +61,9 @@ class Application: Gtk.Application {
 		core_connection.theme_changed_received.connect((name, theme) => {
 			Theme.get_instance().set_from_json(theme);
 		});
-		core_connection.send_client_started();
+		string config_dir = GLib.Path.build_filename(GLib.Environment.get_user_config_dir(), "xi-gtk");
+		GLib.DirUtils.create_with_parents(config_dir, 0777);
+		core_connection.send_client_started(config_dir);
 		unowned string theme = GLib.Environment.get_variable("XI_THEME");
 		if (theme == null) {
 			theme = "InspiredGitHub";
