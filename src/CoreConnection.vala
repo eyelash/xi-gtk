@@ -37,6 +37,7 @@ class CoreConnection {
 	public signal void scroll_to_received(int64 line, int64 col);
 	public signal void def_style_received(Json.Object params);
 	public signal void theme_changed_received(string name, Json.Object theme);
+	public signal void alert_received(string msg);
 
 	private bool receive() {
 		try {
@@ -80,6 +81,10 @@ class CoreConnection {
 							break;
 						case "available_themes":
 							// TODO: implement
+							break;
+						case "alert":
+							var msg = params.get_string_member("msg");
+							alert_received(msg);
 							break;
 					}
 				}
