@@ -25,6 +25,8 @@ First you need to install the dependencies.
 sudo apt install build-essential valac meson libgtk-3-dev libjson-glib-dev
 # Arch:
 sudo pacman -S vala meson
+# Fedora:
+sudo dnf install meson vala gtk3-devel json-glib-devel
 ```
 
 Once you have the dependencies installed you can build xi-gtk.
