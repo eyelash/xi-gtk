@@ -1,4 +1,4 @@
-// Copyright 2017 Elias Aebi
+// Copyright 2017-2018 Elias Aebi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
 namespace Xi {
 
 class Window: Gtk.ApplicationWindow {
-	public CoreConnection core_connection { construct; get; }
+	private CoreConnection core_connection;
 	private Xi.Notebook notebook;
 
 	public Window(Gtk.Application application, CoreConnection core_connection) {
-		Object(application: application, core_connection: core_connection);
-	}
+		Object(application: application);
+		this.core_connection = core_connection;
 
-	construct {
 		set_default_size(800, 550);
 
 		// actions

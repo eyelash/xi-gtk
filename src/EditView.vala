@@ -110,11 +110,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 	}
 
-	public override void get_preferred_height(out int minimum_height, out int natural_height) {
-		minimum_height = (int)(line_cache.get_height() * line_height);
-		natural_height = minimum_height;
-	}
-
 	public override bool draw(Cairo.Context cr) {
 		Gdk.cairo_set_source_rgba(cr, Theme.get_instance().background);
 		cr.paint();
@@ -211,7 +206,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	private void scroll() {
 		double value = _vadjustment.value - padding;
-		uint64 previous_first_line = first_line;
+		int64 previous_first_line = first_line;
 		first_line = int64.max(0, (int64)(value / line_height));
 		if (first_line != previous_first_line) {
 			core_connection.send_scroll(view_id, first_line, first_line + visible_lines);
@@ -220,8 +215,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		queue_draw();
 	}
 
-	// public interface
-	public void update(Json.Object update) {
+	private void update(Json.Object update) {
 		line_cache.update(update);
 		_vadjustment.upper = double.max(line_cache.get_height() * line_height + 2 * padding, get_allocated_height());
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
@@ -235,7 +229,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 	}
 
-	public void scroll_to(int64 line, int64 col) {
+	private void scroll_to(int64 line, int64 col) {
 		if ((line + 1) * line_height + 2 * padding > _vadjustment.value + get_allocated_height()) {
 			_vadjustment.value = (line + 1) * line_height + 2 * padding - get_allocated_height();
 		}
