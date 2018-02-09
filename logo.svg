@@ -1,0 +1,46 @@
+<!--
+
+Copyright 2018 Elias Aebi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+-->
+<svg width="48" height="48" xmlns="http://www.w3.org/2000/svg">
+<defs>
+	<filter id="b1" filterUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
+		<feGaussianBlur in="SourceGraphic" stdDeviation="0.8"/>
+	</filter>
+	<filter id="b2" filterUnits="userSpaceOnUse" x="0" y="0" width="48" height="48">
+		<feGaussianBlur in="SourceGraphic" stdDeviation="0.2"/>
+	</filter>
+	<linearGradient id="g1" gradientUnits="userSpaceOnUse" x1="0" y1="4" x2="0" y2="44">
+		<stop offset="0" stop-color="#C03"/>
+		<stop offset="1" stop-color="#E03"/>
+	</linearGradient>
+	<linearGradient id="g2" gradientUnits="userSpaceOnUse" x1="0" y1="4" x2="0" y2="44">
+		<stop offset="0" stop-color="#FFF"/>
+		<stop offset="1" stop-color="#BBB"/>
+	</linearGradient>
+	<clipPath id="c1">
+		<path d="M 24,5 a 1,1 0 0 0 0,38 a 1,1 0 0 0 0,-38 Z"/>
+	</clipPath>
+	<clipPath id="c2">
+		<path d="M 16,15 l 2,0 0,2 -2,0 Z M 30,15 l 2,0 0,2 -2,0 Z M 16,31 l 2,0 0,2 -2,0 Z M 30,31 l 2,0 0,2 -2,0 Z M 19,21 l 2,0 0,2 -2,0 Z M 27,21 l 2,0 0,2 -2,0 Z M 19,25 l 2,0 0,2 -2,0 Z M 27,25 l 2,0 0,2 -2,0 Z"/>
+	</clipPath>
+</defs>
+<path d="M 24,4 a 1,1 0 0 0 0,40 a 1,1 0 0 0 0,-40 Z" fill="#000" fill-opacity="0.4" filter="url(#b1)"/>
+<path d="M 24,5 a 1,1 0 0 0 0,38 a 1,1 0 0 0 0,-38 Z" fill="url(#g1)"/>
+<path d="M 24,4 a 1,1 0 0 0 0,40 a 1,1 0 0 0 0,-40 Z m 0,2 a 1,1 0 0 1 0,36 a 2,2 0 0 1 0,-36 Z M 16,13 l 16,0 0,4 -2,0 0,-2 -12,0 0,2 -2,0 Z M 19,21 l 2,0 0,2 6,0 0,-2 2,0 0,6 -2,0 0,-2 -6,0 0,2 -2,0 Z M 16,31 l 2,0 0,2 12,0 0,-2 2,0 0,4 -16,0" fill="#000" fill-opacity="0.2" filter="url(#b2)" clip-path="c1"/>
+<path d="M 24,4 a 1,1 0 0 0 0,40 a 1,1 0 0 0 0,-40 Z m 0,2 a 1,1 0 0 1 0,36 a 2,2 0 0 1 0,-36 Z M 16,13 l 16,0 0,4 -2,0 0,-2 -12,0 0,2 -2,0 Z M 19,21 l 2,0 0,2 6,0 0,-2 2,0 0,6 -2,0 0,-2 -6,0 0,2 -2,0 Z M 16,31 l 2,0 0,2 12,0 0,-2 2,0 0,4 -16,0" fill="url(#g2)"/>
+<path d="M 16,13 l 16,0 0,2 -16,0 Z M 16,33 l 16,0 0,2 -16,0 Z M 19,23 l 10,0 0,2 -10,0 Z" fill="#000" fill-opacity="0.2" filter="url(#b2)" clip-path="url(#c2)"/>
+</svg>
