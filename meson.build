@@ -24,6 +24,11 @@ dependencies = [
 	meson.get_compiler('c').find_library('m')
 ]
 
+config = configuration_data()
+config.set_quoted('PLUGIN_DIR', join_paths(get_option('prefix'), get_option('datadir'), 'xi-gtk', 'plugins'))
+configure_file(configuration: config, output: 'config.h')
+dependencies += meson.get_compiler('vala').find_library('config', dirs: meson.current_source_dir())
+
 sources += import('gnome').compile_resources('resources', 'resources/gresource.xml', source_dir: 'resources')
 executable('xi-gtk', sources, dependencies: dependencies, install: true)
 configuration = configuration_data()

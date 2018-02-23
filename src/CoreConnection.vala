@@ -150,9 +150,10 @@ class CoreConnection {
 		send_request("edit", params, response_handler);
 	}
 
-	public void send_client_started(string config_dir) {
+	public void send_client_started(string config_dir, string client_extras_dir) {
 		var params = new Json.Object();
 		params.set_string_member("config_dir", config_dir);
+		params.set_string_member("client_extras_dir", client_extras_dir);
 		send_notification("client_started", params);
 	}
 

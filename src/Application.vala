@@ -63,7 +63,7 @@ class Application: Gtk.Application {
 		});
 		string config_dir = GLib.Path.build_filename(GLib.Environment.get_user_config_dir(), "xi-gtk");
 		GLib.DirUtils.create_with_parents(config_dir, 0777);
-		core_connection.send_client_started(config_dir);
+		core_connection.send_client_started(config_dir, Config.PLUGIN_DIR);
 		unowned string theme = GLib.Environment.get_variable("XI_THEME");
 		if (theme == null) {
 			theme = "InspiredGitHub";
