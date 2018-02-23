@@ -1,8 +1,18 @@
 # xi-gtk
 
-[![Join the chat at https://gitter.im/eyelash/xi-gtk](https://badges.gitter.im/eyelash/xi-gtk.svg)](https://gitter.im/eyelash/xi-gtk)
+a GTK+ front-end for the [Xi editor](https://github.com/google/xi-editor)
 
-![screenshot](https://raw.githubusercontent.com/eyelash/xi-gtk/master/screenshot.png)
+**This project is still in development and not yet ready to be used as your main text editor.**
+
+![screenshot](screenshot.png)
+
+## Features
+
+- multiple cursors
+
+## Download
+
+## Development
 
 ## Instructions
 
@@ -54,7 +64,7 @@ Shortcut                                         | Command
 <kbd>Control</kbd>+<kbd>Y</kbd>                  | Redo
 <kbd>Control</kbd>+<kbd>Q</kbd>                  | Quit
 
-## To Do
+## Roadmap
 
 - [x] mouse input and selections
 - [x] saving
