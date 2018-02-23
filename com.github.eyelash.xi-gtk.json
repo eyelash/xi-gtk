@@ -30,6 +30,34 @@
 			}
 		},
 		{
+			"name": "oniguruma",
+			"sources": [
+				{
+					"type": "git",
+					"url": "https://github.com/kkos/oniguruma"
+				}
+			]
+		},
+		{
+			"name": "xi-syntect-plugin",
+			"sources": [
+				{
+					"type": "git",
+					"url": "https://github.com/google/xi-editor"
+				}
+			],
+			"subdir": "rust/syntect-plugin",
+			"buildsystem": "simple",
+			"build-commands": [
+				"source /usr/lib/sdk/rust-stable/enable.sh && cargo build --release",
+				"install -D manifest.toml /app/share/xi-gtk/plugins/syntect/manifest.toml",
+				"install -D target/release/xi-syntect-plugin /app/share/xi-gtk/plugins/syntect/bin/xi-syntect-plugin"
+			],
+			"build-options": {
+				"build-args": ["--share=network"]
+			}
+		},
+		{
 			"name": "xi-gtk",
 			"sources": [
 				{
