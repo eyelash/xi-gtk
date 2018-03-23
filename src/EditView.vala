@@ -48,6 +48,10 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 	}
 	public Gtk.ScrollablePolicy vscroll_policy { set; get; }
+	public bool get_border(out Gtk.Border border) {
+		border = Gtk.Border();
+		return false;
+	}
 
 	// private helper methods
 	private void convert_xy(double x, double y, out int64 line, out int64 column) {
