@@ -190,10 +190,18 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 				}
 				break;
 			case Gdk.EventType.2BUTTON_PRESS:
-				core_connection.send_click(view_id, line, column, 0, 2);
+				if ((event.state & Gdk.ModifierType.CONTROL_MASK) != 0) {
+					core_connection.send_gesture(view_id, line, column, "multi_word_select");
+				} else {
+					core_connection.send_click(view_id, line, column, 0, 2);
+				}
 				break;
 			case Gdk.EventType.3BUTTON_PRESS:
-				core_connection.send_click(view_id, line, column, 0, 3);
+				if ((event.state & Gdk.ModifierType.CONTROL_MASK) != 0) {
+					core_connection.send_gesture(view_id, line, column, "multi_line_select");
+				} else {
+					core_connection.send_click(view_id, line, column, 0, 3);
+				}
 				break;
 		}
 		return Gdk.EVENT_STOP;
