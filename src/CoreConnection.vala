@@ -19,15 +19,9 @@ class CoreConnection {
 	private UnixOutputStream core_stdin;
 	private DataInputStream core_stdout;
 	private int id;
-	public class ResponseHandler {
-		public delegate void Delegate(Json.Node result);
-		private Delegate d;
-		public ResponseHandler(owned Delegate d) {
-			this.d = (owned)d;
-		}
-		public void invoke(Json.Node result) {
-			d(result);
-		}
+	private class ResponseHandler {
+		public SourceFunc callback;
+		public Json.Node result;
 	}
 	private HashTable<int, ResponseHandler> response_handlers;
 
@@ -52,9 +46,9 @@ class CoreConnection {
 					int id = (int)root.get_int_member("id");
 					var handler = response_handlers[id];
 					if (handler != null) {
-						var result = root.get_member("result");
-						handler.invoke(result);
 						response_handlers.remove(id);
+						handler.result = root.get_member("result");
+						handler.callback();
 					}
 				} else {
 					var method = root.get_string_member("method");
@@ -117,13 +111,17 @@ class CoreConnection {
 		send(root);
 	}
 
-	private void send_request(string method, Json.Object params, ResponseHandler response_handler) {
+	private async Json.Node send_request(string method, Json.Object params) {
+		var response_handler = new ResponseHandler();
+		response_handler.callback = send_request.callback;
 		response_handlers[id] = response_handler;
 		var root = new Json.Object();
 		root.set_int_member("id", id++);
 		root.set_string_member("method", method);
 		root.set_object_member("params", params);
 		send(root);
+		yield;
+		return response_handler.result;
 	}
 
 	public void send_edit(string view_id, string method, Json.Object edit_params = new Json.Object()) {
@@ -142,12 +140,12 @@ class CoreConnection {
 		send_notification("edit", params);
 	}
 
-	private void send_edit_request(string view_id, string method, Json.Object edit_params, ResponseHandler response_handler) {
+	private async Json.Node send_edit_request(string view_id, string method, Json.Object edit_params) {
 		var params = new Json.Object();
 		params.set_string_member("method", method);
 		params.set_string_member("view_id", view_id);
 		params.set_object_member("params", edit_params);
-		send_request("edit", params, response_handler);
+		return yield send_request("edit", params);
 	}
 
 	public void send_client_started(string config_dir, string client_extras_dir) {
@@ -157,12 +155,13 @@ class CoreConnection {
 		send_notification("client_started", params);
 	}
 
-	public void send_new_view(string? file_path, owned ResponseHandler.Delegate response_handler) {
+	public async string send_new_view(string? file_path) {
 		var params = new Json.Object();
 		if (file_path != null) {
 			params.set_string_member("file_path", file_path);
 		}
-		send_request("new_view", params, new ResponseHandler((owned)response_handler));
+		var result = yield send_request("new_view", params);
+		return result.get_string();
 	}
 
 	public void send_close_view(string view_id) {
@@ -177,12 +176,14 @@ class CoreConnection {
 		send_edit(view_id, "insert", params);
 	}
 
-	public void send_copy(string view_id, owned ResponseHandler.Delegate response_handler) {
-		send_edit_request(view_id, "copy", new Json.Object(), new ResponseHandler((owned)response_handler));
+	public async string send_copy(string view_id) {
+		var result = yield send_edit_request(view_id, "copy", new Json.Object());
+		return result.get_string();
 	}
 
-	public void send_cut(string view_id, owned ResponseHandler.Delegate response_handler) {
-		send_edit_request(view_id, "cut", new Json.Object(), new ResponseHandler((owned)response_handler));
+	public async string send_cut(string view_id) {
+		var result = yield send_edit_request(view_id, "cut", new Json.Object());
+		return result.get_string();
 	}
 
 	public void send_save(string view_id, string file_path) {
@@ -237,11 +238,11 @@ class CoreConnection {
 		send_edit(view_id, "gesture", params);
 	}
 
-	public void send_find(string view_id, string chars, bool case_sensitive, owned ResponseHandler.Delegate response_handler) {
+	public async Json.Node send_find(string view_id, string chars, bool case_sensitive) {
 		var params = new Json.Object();
 		params.set_string_member("chars", chars);
 		params.set_boolean_member("case_sensitive", case_sensitive);
-		send_edit_request(view_id, "find", params, new ResponseHandler((owned)response_handler));
+		return yield send_edit_request(view_id, "find", params);
 	}
 	public void send_find_next(string view_id, bool wrap_around, bool allow_same) {
 		var params = new Json.Object();

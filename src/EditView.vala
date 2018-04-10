@@ -257,17 +257,19 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	[Signal(action = true)]
 	public virtual signal void copy() {
-		core_connection.send_copy(view_id, (result) => {
-			if (!result.is_null()) {
-				get_clipboard(Gdk.SELECTION_CLIPBOARD).set_text(result.get_string(), -1);
+		core_connection.send_copy.begin(view_id, (obj, res) => {
+			string result = core_connection.send_copy.end(res);
+			if (result != null) {
+				get_clipboard(Gdk.SELECTION_CLIPBOARD).set_text(result, -1);
 			}
 		});
 	}
 	[Signal(action = true)]
 	public virtual signal void cut() {
-		core_connection.send_cut(view_id, (result) => {
-			if (!result.is_null()) {
-				get_clipboard(Gdk.SELECTION_CLIPBOARD).set_text(result.get_string(), -1);
+		core_connection.send_cut.begin(view_id, (obj, res) => {
+			string result = core_connection.send_cut.end(res);
+			if (result != null) {
+				get_clipboard(Gdk.SELECTION_CLIPBOARD).set_text(result, -1);
 			}
 		});
 	}
@@ -307,7 +309,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public void find(string chars) {
-		core_connection.send_find(view_id, chars, false, () => {});
+		core_connection.send_find.begin(view_id, chars, false);
 	}
 	public void find_next() {
 		core_connection.send_find_next(view_id, true, false);
