@@ -178,29 +178,33 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 		int64 line, column;
 		convert_xy(event.x, event.y, out line, out column);
+		bool modify_selection = (event.state & get_modifier_mask(Gdk.ModifierIntent.MODIFY_SELECTION)) != 0;
+		bool extend_selection = (event.state & get_modifier_mask(Gdk.ModifierIntent.EXTEND_SELECTION)) != 0;
 		switch (event.type) {
 			case Gdk.EventType.BUTTON_PRESS:
-				if ((event.state & Gdk.ModifierType.CONTROL_MASK) != 0) {
+				if (modify_selection) {
 					core_connection.send_gesture(view_id, line, column, "toggle_sel");
+				} else if (extend_selection) {
+					core_connection.send_gesture(view_id, line, column, "range_select");
 				} else {
-					core_connection.send_click(view_id, line, column, 0, 1);
+					core_connection.send_gesture(view_id, line, column, "point_select");
 					if (event.button == Gdk.BUTTON_MIDDLE) {
 						paste_primary();
 					}
 				}
 				break;
 			case Gdk.EventType.2BUTTON_PRESS:
-				if ((event.state & Gdk.ModifierType.CONTROL_MASK) != 0) {
+				if (modify_selection) {
 					core_connection.send_gesture(view_id, line, column, "multi_word_select");
 				} else {
-					core_connection.send_click(view_id, line, column, 0, 2);
+					core_connection.send_gesture(view_id, line, column, "word_select");
 				}
 				break;
 			case Gdk.EventType.3BUTTON_PRESS:
-				if ((event.state & Gdk.ModifierType.CONTROL_MASK) != 0) {
+				if (modify_selection) {
 					core_connection.send_gesture(view_id, line, column, "multi_line_select");
 				} else {
-					core_connection.send_click(view_id, line, column, 0, 3);
+					core_connection.send_gesture(view_id, line, column, "line_select");
 				}
 				break;
 		}

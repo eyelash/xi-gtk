@@ -206,15 +206,6 @@ class CoreConnection {
 		send_edit_array(view_id, "scroll", params);
 	}
 
-	public void send_click(string view_id, int64 line, int64 column, int64 modifiers, int64 click_count) {
-		var params = new Json.Array();
-		params.add_int_element(line);
-		params.add_int_element(column);
-		params.add_int_element(modifiers);
-		params.add_int_element(click_count);
-		send_edit_array(view_id, "click", params);
-	}
-
 	public void send_drag(string view_id, int64 line, int64 column, int64 modifiers) {
 		var params = new Json.Array();
 		params.add_int_element(line);
