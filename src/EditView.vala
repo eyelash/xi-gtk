@@ -19,6 +19,8 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private string view_id;
 	private File file;
 	private Gtk.IMContext im_context;
+	private Gtk.GestureMultiPress multipress_gesture;
+	private Gtk.GestureDrag drag_gesture;
 	private Gtk.Border padding;
 	private LineCache line_cache;
 	private double ascent;
@@ -78,6 +80,10 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		core_connection.scroll_to_received[view_id].connect(handle_scroll_to);
 		im_context = new Gtk.IMMulticontext();
 		im_context.commit.connect(handle_commit);
+		multipress_gesture = new Gtk.GestureMultiPress(this);
+		multipress_gesture.pressed.connect(handle_pressed);
+		drag_gesture = new Gtk.GestureDrag(this);
+		drag_gesture.drag_update.connect(handle_drag_update);
 		unowned Gtk.StyleContext style_context = get_style_context();
 		style_context.add_class(Gtk.STYLE_CLASS_MONOSPACE);
 		padding = style_context.get_padding(style_context.get_state());
@@ -182,35 +188,39 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		core_connection.send_insert(view_id, str);
 	}
 
-	public override bool button_press_event(Gdk.EventButton event) {
+	private void handle_pressed(int n_press, double x, double y) {
 		if (focus_on_click && !has_focus) {
 			grab_focus();
 		}
-		int64 line = get_line(event.y);
-		int64 column = get_index(event.x, line);
-		bool modify_selection = (event.state & get_modifier_mask(Gdk.ModifierIntent.MODIFY_SELECTION)) != 0;
-		bool extend_selection = (event.state & get_modifier_mask(Gdk.ModifierIntent.EXTEND_SELECTION)) != 0;
-		switch (event.type) {
-			case Gdk.EventType.BUTTON_PRESS:
+		int64 line = get_line(y);
+		int64 column = get_index(x, line);
+		uint button = multipress_gesture.get_current_button();
+		var event = multipress_gesture.get_last_event(multipress_gesture.get_current_sequence());
+		Gdk.ModifierType state;
+		event.get_state(out state);
+		bool modify_selection = (state & get_modifier_mask(Gdk.ModifierIntent.MODIFY_SELECTION)) != 0;
+		bool extend_selection = (state & get_modifier_mask(Gdk.ModifierIntent.EXTEND_SELECTION)) != 0;
+		switch (n_press) {
+			case 1:
 				if (modify_selection) {
 					core_connection.send_gesture(view_id, line, column, "toggle_sel");
 				} else if (extend_selection) {
 					core_connection.send_gesture(view_id, line, column, "range_select");
 				} else {
 					core_connection.send_gesture(view_id, line, column, "point_select");
-					if (event.button == Gdk.BUTTON_MIDDLE) {
+					if (button == Gdk.BUTTON_MIDDLE) {
 						paste_primary();
 					}
 				}
 				break;
-			case Gdk.EventType.2BUTTON_PRESS:
+			case 2:
 				if (modify_selection) {
 					core_connection.send_gesture(view_id, line, column, "multi_word_select");
 				} else {
 					core_connection.send_gesture(view_id, line, column, "word_select");
 				}
 				break;
-			case Gdk.EventType.3BUTTON_PRESS:
+			case 3:
 				if (modify_selection) {
 					core_connection.send_gesture(view_id, line, column, "multi_line_select");
 				} else {
@@ -218,16 +228,14 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 				}
 				break;
 		}
-		return Gdk.EVENT_STOP;
 	}
-	public override bool button_release_event(Gdk.EventButton event) {
-		return Gdk.EVENT_STOP;
-	}
-	public override bool motion_notify_event(Gdk.EventMotion event) {
-		int64 line = get_line(event.y);
-		int64 column = get_index(event.x, line);
+
+	private void handle_drag_update(double offset_x, double offset_y) {
+		double start_x, start_y;
+		drag_gesture.get_start_point(out start_x, out start_y);
+		int64 line = get_line(start_y + offset_y);
+		int64 column = get_index(start_x + offset_x, line);
 		core_connection.send_drag(view_id, line, column, 0);
-		return Gdk.EVENT_STOP;
 	}
 
 	private void handle_scroll() {
