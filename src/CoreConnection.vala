@@ -15,9 +15,7 @@
 namespace Xi {
 
 class CoreConnection {
-	private Pid pid;
-	private UnixOutputStream core_stdin;
-	private DataInputStream core_stdout;
+	private Subprocess core_process;
 	private int id;
 	private class ResponseHandler {
 		public SourceFunc callback;
@@ -33,67 +31,12 @@ class CoreConnection {
 	public signal void theme_changed_received(string name, Json.Object theme);
 	public signal void alert_received(string msg);
 
-	private bool receive() {
-		try {
-			do {
-				string line = core_stdout.read_line_utf8(null);
-				//stdout.printf("core to front-end: %s\n", line);
-				var parser = new Json.Parser();
-				parser.load_from_data(line);
-				var root = parser.get_root().get_object();
-				if (root.has_member("id")) {
-					// response
-					int id = (int)root.get_int_member("id");
-					var handler = response_handlers[id];
-					if (handler != null) {
-						response_handlers.remove(id);
-						handler.result = root.get_member("result");
-						handler.callback();
-					}
-				} else {
-					var method = root.get_string_member("method");
-					var params = root.get_object_member("params");
-					switch (method) {
-						case "update":
-							var view_id = params.get_string_member("view_id");
-							var update = params.get_object_member("update");
-							update_received[view_id](update);
-							break;
-						case "scroll_to":
-							var view_id = params.get_string_member("view_id");
-							int64 scroll_to_line = params.get_int_member("line");
-							int64 scroll_to_col = params.get_int_member("col");
-							scroll_to_received[view_id](scroll_to_line, scroll_to_col);
-							break;
-						case "def_style":
-							def_style_received(params);
-							break;
-						case "theme_changed":
-							var name = params.get_string_member("name");
-							var theme = params.get_object_member("theme");
-							theme_changed_received(name, theme);
-							break;
-						case "available_themes":
-							// TODO: implement
-							break;
-						case "alert":
-							var msg = params.get_string_member("msg");
-							alert_received(msg);
-							break;
-					}
-				}
-			} while (core_stdout.get_available() > 0);
-		} catch (Error error) {
-			critical(error.message);
-		}
-		return true;
-	}
-
 	private void send(Json.Object root) {
 		var root_node = new Json.Node(Json.NodeType.OBJECT);
 		root_node.set_object(root);
 		var generator = new Json.Generator();
 		generator.set_root(root_node);
+		var core_stdin = core_process.get_stdin_pipe();
 		try {
 			generator.to_stream(core_stdin);
 			core_stdin.write("\n".data);
@@ -247,22 +190,79 @@ class CoreConnection {
 		send_edit(view_id, "find_previous", params);
 	}
 
-	private static DataInputStream create_input_stream(int fd, owned PollableSourceFunc func) {
-		var stream = new UnixInputStream(fd, true);
-		var source = stream.create_source();
-		source.set_callback((owned)func);
-		source.attach(null);
-		return new DataInputStream(stream);
+	private void receive_response(Json.Object root) {
+		int id = (int)root.get_int_member("id");
+		var handler = response_handlers[id];
+		if (handler != null) {
+			response_handlers.remove(id);
+			handler.result = root.get_member("result");
+			handler.callback();
+		}
+	}
+
+	private void receive_notification(Json.Object root) {
+		var method = root.get_string_member("method");
+		var params = root.get_object_member("params");
+		switch (method) {
+			case "update":
+				var view_id = params.get_string_member("view_id");
+				var update = params.get_object_member("update");
+				update_received[view_id](update);
+				break;
+			case "scroll_to":
+				var view_id = params.get_string_member("view_id");
+				int64 scroll_to_line = params.get_int_member("line");
+				int64 scroll_to_col = params.get_int_member("col");
+				scroll_to_received[view_id](scroll_to_line, scroll_to_col);
+				break;
+			case "def_style":
+				def_style_received(params);
+				break;
+			case "config_changed":
+				// TODO: implement
+				break;
+			case "available_themes":
+				// TODO: implement
+				break;
+			case "theme_changed":
+				var name = params.get_string_member("name");
+				var theme = params.get_object_member("theme");
+				theme_changed_received(name, theme);
+				break;
+			case "alert":
+				var msg = params.get_string_member("msg");
+				alert_received(msg);
+				break;
+		}
+	}
+
+	private async void receive() {
+		try {
+			var core_stdout = new DataInputStream(core_process.get_stdout_pipe());
+			string? line = yield core_stdout.read_line_utf8_async(Priority.DEFAULT, null, null);
+			while (line != null) {
+				//stdout.printf("core to front-end: %s\n", line);
+				var parser = new Json.Parser();
+				parser.load_from_data(line);
+				var root = parser.get_root().get_object();
+				if (root.has_member("id")) {
+					receive_response(root);
+				} else {
+					receive_notification(root);
+				}
+				line = yield core_stdout.read_line_utf8_async(Priority.DEFAULT, null, null);
+			}
+		} catch (Error error) {
+			critical(error.message);
+		}
 	}
 
 	public CoreConnection(string[] command) {
 		response_handlers = new HashTable<int, ResponseHandler>(direct_hash, direct_equal);
 		try {
-			int core_stdin_fd, core_stdout_fd;
-			Process.spawn_async_with_pipes(null, command, null, SpawnFlags.SEARCH_PATH, null, out pid, out core_stdin_fd, out core_stdout_fd, null);
-			core_stdin = new UnixOutputStream(core_stdin_fd, true);
-			core_stdout = create_input_stream(core_stdout_fd, receive);
-		} catch (SpawnError error) {
+			core_process = new Subprocess.newv(command, SubprocessFlags.STDIN_PIPE | SubprocessFlags.STDOUT_PIPE);
+			receive.begin();
+		} catch (Error error) {
 			critical(error.message);
 		}
 	}
