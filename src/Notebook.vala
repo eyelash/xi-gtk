@@ -17,7 +17,21 @@ namespace Xi {
 class Notebook: Gtk.Notebook {
 
 	public Notebook() {
-		Object(scrollable: true, show_border: false);
+		Object(scrollable: true, show_border: false, show_tabs: false);
+		page_removed.connect(() => check_tabs_hide());
+		page_added.connect(() => check_tabs_show());
+	}
+
+	void check_tabs_hide() {
+		if (get_n_pages() <= 1) {
+			show_tabs = false;
+		}
+	}
+
+	void check_tabs_show() {
+		if (get_n_pages() > 1) {
+			show_tabs = true;
+		}
 	}
 
 	private Gtk.Box create_tab_label(EditView edit_view, EditViewContainer container) {
