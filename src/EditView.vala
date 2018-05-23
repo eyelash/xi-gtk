@@ -19,14 +19,13 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private File file;
 	private CoreConnection core_connection;
 	private Gtk.IMContext im_context;
+	private LineCache line_cache;
 	private double ascent;
 	private double line_height;
 	private double char_width;
-
 	private double padding;
-	private LineCache line_cache;
 	private int64 first_line;
-	private int visible_lines;
+	private int64 last_line;
 	private double gutter_width;
 	private Blinker blinker;
 
@@ -40,7 +39,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public Gtk.Adjustment vadjustment {
 		construct set {
 			_vadjustment = value;
-			if (value != null) value.value_changed.connect(scroll);
+			if (value != null) value.value_changed.connect(handle_scroll);
 		}
 		get {
 			return _vadjustment;
@@ -71,18 +70,18 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		this.view_id = view_id;
 		this.file = file;
 		this.core_connection = core_connection;
-		core_connection.update_received[view_id].connect(update);
-		core_connection.scroll_to_received[view_id].connect(scroll_to);
+		core_connection.update_received[view_id].connect(handle_update);
+		core_connection.scroll_to_received[view_id].connect(handle_scroll_to);
 		im_context = new Gtk.IMMulticontext();
 		im_context.commit.connect(handle_commit);
 		var settings = new Settings("org.gnome.desktop.interface");
 		var font_description = Pango.FontDescription.from_string(settings.get_string("monospace-font-name"));
 		var metrics = get_pango_context().get_metrics(font_description, null);
+		line_cache = new LineCache(get_pango_context(), font_description);
 		ascent = Pango.units_to_double(metrics.get_ascent());
 		line_height = ascent + Pango.units_to_double(metrics.get_descent());
 		char_width = Pango.units_to_double(metrics.get_approximate_char_width());
 		padding = char_width;
-		line_cache = new LineCache(get_pango_context(), font_description);
 		blinker = new Blinker(settings.get_int("cursor-blink-time") / 2);
 		blinker.redraw.connect(this.queue_draw);
 		can_focus = true;
@@ -108,10 +107,10 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	public override void size_allocate(Gtk.Allocation allocation) {
 		base.size_allocate(allocation);
-		int previous_visible_lines = visible_lines;
-		visible_lines = (int)(allocation.height / line_height) + 2;
-		if (visible_lines != previous_visible_lines) {
-			core_connection.send_scroll(view_id, first_line, first_line + visible_lines);
+		int64 new_last_line = get_line(allocation.height) + 1;
+		if (new_last_line != last_line) {
+			last_line = new_last_line;
+			core_connection.send_scroll(view_id, first_line, last_line);
 		}
 		_vadjustment.page_size = allocation.height;
 		_vadjustment.upper = double.max(line_cache.get_height() * line_height + 2 * padding, allocation.height);
@@ -123,14 +122,14 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public override bool draw(Cairo.Context cr) {
 		Gdk.cairo_set_source_rgba(cr, Theme.get_instance().background);
 		cr.paint();
-		for (int64 i = first_line; i < first_line + visible_lines; i++) {
+		for (int64 i = first_line; i < last_line; i++) {
 			var line = line_cache.get_line(i);
 			if (line != null) {
 				double y = get_y(i);
 				line.draw_background(cr, padding + gutter_width + 2 * char_width, y, get_allocated_width(), line_height);
 			}
 		}
-		for (int64 i = first_line; i < first_line + visible_lines; i++) {
+		for (int64 i = first_line; i < last_line; i++) {
 			var line = line_cache.get_line(i);
 			if (line != null) {
 				double y = get_y(i);
@@ -226,17 +225,18 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		return Gdk.EVENT_STOP;
 	}
 
-	private void scroll() {
-		double value = _vadjustment.value - padding;
-		int64 previous_first_line = first_line;
-		first_line = int64.max(0, (int64)(value / line_height));
-		if (first_line != previous_first_line) {
-			core_connection.send_scroll(view_id, first_line, first_line + visible_lines);
+	private void handle_scroll() {
+		int64 new_first_line = get_line(0);
+		int64 new_last_line = get_line(get_allocated_height()) + 1;
+		if (new_first_line != first_line || new_last_line != last_line) {
+			first_line = new_first_line;
+			last_line = new_last_line;
+			core_connection.send_scroll(view_id, first_line, last_line);
 		}
 		queue_draw();
 	}
 
-	private void update(Json.Object update) {
+	private void handle_update(Json.Object update) {
 		line_cache.update(update);
 		_vadjustment.upper = double.max(line_cache.get_height() * line_height + 2 * padding, get_allocated_height());
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
@@ -250,7 +250,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 	}
 
-	private void scroll_to(int64 line, int64 col) {
+	private void handle_scroll_to(int64 line, int64 col) {
 		if ((line + 1) * line_height + 2 * padding > _vadjustment.value + get_allocated_height()) {
 			_vadjustment.value = (line + 1) * line_height + 2 * padding - get_allocated_height();
 		}
