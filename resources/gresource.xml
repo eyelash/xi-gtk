@@ -3,5 +3,6 @@
 	<gresource prefix="/com/github/eyelash/xi-gtk">
 		<file>gtk/menus.ui</file>
 		<file>key-bindings.css</file>
+		<file>style.css</file>
 	</gresource>
 </gresources>

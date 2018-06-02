@@ -23,7 +23,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private double ascent;
 	private double line_height;
 	private double char_width;
-	private double padding;
+	private Gtk.Border padding;
 	private int64 first_line;
 	private int64 last_line;
 	private double gutter_width;
@@ -53,17 +53,17 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	// private helper methods
 	private int64 get_line(double y) {
-		return int64.max(0, (int64)((_vadjustment.value + y - padding) / line_height));
+		return int64.max(0, (int64)((_vadjustment.value + y - padding.top) / line_height));
 	}
 	private int64 get_index(double x, int64 line) {
 		var _line = line_cache.get_line(line);
 		if (_line == null) {
 			return 0;
 		}
-		return _line.x_to_index(x - (padding + gutter_width + 2 * char_width));
+		return _line.x_to_index(x - (padding.left + gutter_width + 2 * char_width));
 	}
 	private double get_y(int64 line) {
-		return line * line_height + padding - _vadjustment.value;
+		return line * line_height + padding.top - _vadjustment.value;
 	}
 
 	public EditView(string view_id, File? file, CoreConnection core_connection) {
@@ -81,13 +81,14 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		ascent = Pango.units_to_double(metrics.get_ascent());
 		line_height = ascent + Pango.units_to_double(metrics.get_descent());
 		char_width = Pango.units_to_double(metrics.get_approximate_char_width());
-		padding = char_width;
+		unowned Gtk.StyleContext style_context = get_style_context();
+		style_context.add_class("xi-edit-view");
+		padding = style_context.get_padding(style_context.get_state());
 		blinker = new Blinker(settings.get_int("cursor-blink-time") / 2);
 		blinker.redraw.connect(this.queue_draw);
 		can_focus = true;
 		set_has_window(true);
 		add_events(Gdk.EventMask.BUTTON_PRESS_MASK|Gdk.EventMask.BUTTON_RELEASE_MASK|Gdk.EventMask.BUTTON_MOTION_MASK|Gdk.EventMask.SCROLL_MASK|Gdk.EventMask.SMOOTH_SCROLL_MASK);
-		get_style_context().add_class("xi-edit-view");
 		if (file != null) {
 			label = file.get_basename();
 		} else {
@@ -113,7 +114,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			core_connection.send_scroll(view_id, first_line, last_line);
 		}
 		_vadjustment.page_size = allocation.height;
-		_vadjustment.upper = double.max(line_cache.get_height() * line_height + 2 * padding, allocation.height);
+		_vadjustment.upper = double.max(line_cache.get_height() * line_height + padding.top + padding.bottom, allocation.height);
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
 			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
 		}
@@ -126,18 +127,18 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 			var line = line_cache.get_line(i);
 			if (line != null) {
 				double y = get_y(i);
-				line.draw_background(cr, padding + gutter_width + 2 * char_width, y, get_allocated_width(), line_height);
+				line.draw_background(cr, padding.left + gutter_width + 2 * char_width, y, get_allocated_width(), line_height);
 			}
 		}
 		for (int64 i = first_line; i < last_line; i++) {
 			var line = line_cache.get_line(i);
 			if (line != null) {
 				double y = get_y(i);
-				line.draw(cr, padding + gutter_width + 2 * char_width, y, ascent);
+				line.draw(cr, padding.left + gutter_width + 2 * char_width, y, ascent);
 				if (blinker.draw_cursor()) {
-					line.draw_cursors(cr, padding + gutter_width + 2 * char_width, y, line_height);
+					line.draw_cursors(cr, padding.left + gutter_width + 2 * char_width, y, line_height);
 				}
-				line.draw_gutter(cr, padding + gutter_width, y, ascent);
+				line.draw_gutter(cr, padding.left + gutter_width, y, ascent);
 			}
 		}
 		return Gdk.EVENT_STOP;
@@ -238,7 +239,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	private void handle_update(Json.Object update) {
 		line_cache.update(update);
-		_vadjustment.upper = double.max(line_cache.get_height() * line_height + 2 * padding, get_allocated_height());
+		_vadjustment.upper = double.max(line_cache.get_height() * line_height + padding.top + padding.bottom, get_allocated_height());
 		if (_vadjustment.value > _vadjustment.upper - _vadjustment.page_size) {
 			_vadjustment.value = _vadjustment.upper - _vadjustment.page_size;
 		}
@@ -251,10 +252,11 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	private void handle_scroll_to(int64 line, int64 col) {
-		if ((line + 1) * line_height + 2 * padding > _vadjustment.value + get_allocated_height()) {
-			_vadjustment.value = (line + 1) * line_height + 2 * padding - get_allocated_height();
+		double min_value = (line + 1) * line_height + padding.top + padding.bottom - get_allocated_height();
+		if (_vadjustment.value < min_value) {
+			_vadjustment.value = min_value;
 		}
-		if (line * line_height < _vadjustment.value) {
+		if (_vadjustment.value > line * line_height) {
 			_vadjustment.value = line * line_height;
 		}
 	}

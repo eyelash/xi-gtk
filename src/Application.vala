@@ -35,6 +35,7 @@ class Application: Gtk.Application {
 		base.startup();
 
 		load_css("/com/github/eyelash/xi-gtk/key-bindings.css");
+		load_css("/com/github/eyelash/xi-gtk/style.css");
 
 		var quit_action = new SimpleAction("quit", null);
 		quit_action.activate.connect(() => {
