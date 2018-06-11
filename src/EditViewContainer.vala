@@ -1,4 +1,4 @@
-// Copyright 2017 Elias Aebi
+// Copyright 2017-2018 Elias Aebi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,9 @@ class EditViewContainer: Gtk.Box {
 	private EditView edit_view;
 	private FindBar find_bar;
 
-	public EditViewContainer(EditView edit_view) {
+	public EditViewContainer(CoreConnection core_connection, string view_id, File? file) {
 		Object(orientation: Gtk.Orientation.VERTICAL);
-		this.edit_view = edit_view;
+		this.edit_view = new EditView(core_connection, view_id, file);
 		find_bar = new FindBar(edit_view);
 		find_bar.hide.connect(() => {
 			this.edit_view.grab_focus();
@@ -37,16 +37,13 @@ class EditViewContainer: Gtk.Box {
 		edit_view.grab_focus();
 	}
 
+	public unowned EditView get_edit_view() {
+		return edit_view;
+	}
+
 	public void show_find_bar() {
 		find_bar.show_all();
 		find_bar.grab_focus();
-	}
-
-	public void save() {
-		edit_view.save();
-	}
-	public void save_as() {
-		edit_view.save_as();
 	}
 }
 

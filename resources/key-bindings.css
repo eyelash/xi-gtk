@@ -1,4 +1,4 @@
-@binding-set xi-edit-view-bindings {
+@binding-set xi-editview-bindings {
 	bind "Right"                 { "send-edit"("move_right") };
 	bind "<Shift>Right"          { "send-edit"("move_right_and_modify_selection") };
 	bind "<Control>Right"        { "send-edit"("move_word_right") };
@@ -41,6 +41,6 @@
 	bind "<Primary>V" { "paste"() };
 }
 
-.xi-edit-view {
-	-gtk-key-bindings: xi-edit-view-bindings;
+xi-editview {
+	-gtk-key-bindings: xi-editview-bindings;
 }

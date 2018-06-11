@@ -1,4 +1,4 @@
-// Copyright 2016-2017 Elias Aebi
+// Copyright 2016-2018 Elias Aebi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,8 @@ class Notebook: Gtk.Notebook {
 		Object(scrollable: true, show_border: false);
 	}
 
-	private Gtk.Box create_tab_label(EditView edit_view, EditViewContainer container) {
+	private Gtk.Box create_tab_label(EditViewContainer container) {
+		unowned EditView edit_view = container.get_edit_view();
 		var box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
 
 		var label = new Gtk.Label(edit_view.label);
@@ -47,9 +48,9 @@ class Notebook: Gtk.Notebook {
 		return box;
 	}
 
-	public void add_edit_view(EditView edit_view) {
-		var container = new EditViewContainer(edit_view);
-		var label = create_tab_label(edit_view, container);
+	public void add_edit_view(CoreConnection core_connection, string view_id, File? file) {
+		var container = new EditViewContainer(core_connection, view_id, file);
+		var label = create_tab_label(container);
 		append_page(container, label);
 		set_tab_reorderable(container, true);
 		child_set_property(container, "tab-expand", true);

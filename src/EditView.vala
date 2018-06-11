@@ -15,15 +15,15 @@
 namespace Xi {
 
 class EditView: Gtk.DrawingArea, Gtk.Scrollable {
+	private CoreConnection core_connection;
 	private string view_id;
 	private File file;
-	private CoreConnection core_connection;
 	private Gtk.IMContext im_context;
+	private Gtk.Border padding;
 	private LineCache line_cache;
 	private double ascent;
 	private double line_height;
 	private double char_width;
-	private Gtk.Border padding;
 	private int64 first_line;
 	private int64 last_line;
 	private double gutter_width;
@@ -66,25 +66,29 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		return line * line_height + padding.top - _vadjustment.value;
 	}
 
-	public EditView(string view_id, File? file, CoreConnection core_connection) {
+	static construct {
+		set_css_name("xi-editview");
+	}
+
+	public EditView(CoreConnection core_connection, string view_id, File? file) {
+		this.core_connection = core_connection;
 		this.view_id = view_id;
 		this.file = file;
-		this.core_connection = core_connection;
 		core_connection.update_received[view_id].connect(handle_update);
 		core_connection.scroll_to_received[view_id].connect(handle_scroll_to);
 		im_context = new Gtk.IMMulticontext();
 		im_context.commit.connect(handle_commit);
-		var settings = new Settings("org.gnome.desktop.interface");
-		var font_description = Pango.FontDescription.from_string(settings.get_string("monospace-font-name"));
-		var metrics = get_pango_context().get_metrics(font_description, null);
-		line_cache = new LineCache(get_pango_context(), font_description);
+		unowned Gtk.StyleContext style_context = get_style_context();
+		style_context.add_class(Gtk.STYLE_CLASS_MONOSPACE);
+		padding = style_context.get_padding(style_context.get_state());
+		unowned Pango.Context pango_context = get_pango_context();
+		unowned Pango.FontDescription font_description = pango_context.get_font_description();
+		var metrics = pango_context.get_metrics(font_description, null);
+		line_cache = new LineCache(pango_context, font_description);
 		ascent = Pango.units_to_double(metrics.get_ascent());
 		line_height = ascent + Pango.units_to_double(metrics.get_descent());
 		char_width = Pango.units_to_double(metrics.get_approximate_char_width());
-		unowned Gtk.StyleContext style_context = get_style_context();
-		style_context.add_class("xi-edit-view");
-		padding = style_context.get_padding(style_context.get_state());
-		blinker = new Blinker(settings.get_int("cursor-blink-time") / 2);
+		blinker = new Blinker(get_settings().gtk_cursor_blink_time / 2);
 		blinker.redraw.connect(this.queue_draw);
 		can_focus = true;
 		set_has_window(true);

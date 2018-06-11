@@ -44,12 +44,12 @@ class Window: Gtk.ApplicationWindow {
 		add_action(open_action);
 		var save_action = new SimpleAction("save", null);
 		save_action.activate.connect(() => {
-			notebook.get_current_edit_view().save();
+			notebook.get_current_edit_view().get_edit_view().save();
 		});
 		add_action(save_action);
 		var save_as_action = new SimpleAction("save-as", null);
 		save_as_action.activate.connect(() => {
-			notebook.get_current_edit_view().save_as();
+			notebook.get_current_edit_view().get_edit_view().save_as();
 		});
 		add_action(save_as_action);
 		var find_action = new SimpleAction("find", null);
@@ -82,7 +82,7 @@ class Window: Gtk.ApplicationWindow {
 	public void add_new_tab(File? file = null) {
 		core_connection.send_new_view.begin(file != null ? file.get_path() : null, (obj, res) => {
 			string view_id = core_connection.send_new_view.end(res);
-			this.notebook.add_edit_view(new EditView(view_id, file, core_connection));
+			this.notebook.add_edit_view(core_connection, view_id, file);
 		});
 	}
 }
