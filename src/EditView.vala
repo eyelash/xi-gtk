@@ -320,7 +320,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	}
 
 	public void find(string chars) {
-		core_connection.send_find.begin(view_id, chars, false);
+		core_connection.send_find(view_id, chars, false);
 	}
 	public void find_next() {
 		core_connection.send_find_next(view_id, true, false);

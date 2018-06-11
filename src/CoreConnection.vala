@@ -172,11 +172,11 @@ class CoreConnection {
 		send_edit(view_id, "gesture", params);
 	}
 
-	public async Json.Node send_find(string view_id, string chars, bool case_sensitive) {
+	public void send_find(string view_id, string chars, bool case_sensitive) {
 		var params = new Json.Object();
 		params.set_string_member("chars", chars);
 		params.set_boolean_member("case_sensitive", case_sensitive);
-		return yield send_edit_request(view_id, "find", params);
+		send_edit(view_id, "find", params);
 	}
 	public void send_find_next(string view_id, bool wrap_around, bool allow_same) {
 		var params = new Json.Object();
