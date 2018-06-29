@@ -199,6 +199,11 @@ class CoreConnection {
 		params.set_boolean_member("visible", visible);
 		send_edit(view_id, "highlight_find", params);
 	}
+	public void send_selection_for_find(string view_id, bool case_sensitive) {
+		var params = new Json.Object();
+		params.set_boolean_member("case_sensitive", case_sensitive);
+		send_edit(view_id, "selection_for_find", params);
+	}
 
 	private void receive_response(Json.Object root) {
 		int id = (int)root.get_int_member("id");

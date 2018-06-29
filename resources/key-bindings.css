@@ -39,6 +39,7 @@
 	bind "<Primary>C" { "copy"() };
 	bind "<Primary>X" { "cut"() };
 	bind "<Primary>V" { "paste"() };
+	bind "<Primary>D" { "add-next-to-selection"() };
 }
 
 xi-editview {

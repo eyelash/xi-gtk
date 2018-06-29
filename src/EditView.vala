@@ -305,6 +305,12 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		});
 	}
 
+	[Signal(action = true)]
+	public virtual signal void add_next_to_selection() {
+		core_connection.send_selection_for_find(view_id, false);
+		core_connection.send_find_next(view_id, true, true, "add");
+	}
+
 	public void save() {
 		if (file == null) {
 			save_as();
