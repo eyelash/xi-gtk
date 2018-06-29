@@ -21,7 +21,7 @@ class EditViewContainer: Gtk.Box {
 	public EditViewContainer(CoreConnection core_connection, string view_id, File? file) {
 		Object(orientation: Gtk.Orientation.VERTICAL);
 		this.edit_view = new EditView(core_connection, view_id, file);
-		find_bar = new FindBar(edit_view);
+		find_bar = new FindBar(core_connection, view_id);
 		find_bar.hide.connect(() => {
 			this.edit_view.grab_focus();
 		});
