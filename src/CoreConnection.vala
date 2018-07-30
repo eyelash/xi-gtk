@@ -119,6 +119,12 @@ class CoreConnection {
 		send_edit(view_id, "insert", params);
 	}
 
+	public void send_paste(string view_id, string chars) {
+		var params = new Json.Object();
+		params.set_string_member("chars", chars);
+		send_edit(view_id, "paste", params);
+	}
+
 	public async string send_copy(string view_id) {
 		var result = yield send_edit_request(view_id, "copy", new Json.Object());
 		return result.get_string();

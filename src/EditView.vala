@@ -292,7 +292,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	public virtual signal void paste() {
 		get_clipboard(Gdk.SELECTION_CLIPBOARD).request_text((clipboard, text) => {
 			if (text != null) {
-				core_connection.send_insert(view_id, text);
+				core_connection.send_paste(view_id, text);
 			}
 		});
 	}
@@ -300,7 +300,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 	private void paste_primary() {
 		get_clipboard(Gdk.SELECTION_PRIMARY).request_text((clipboard, text) => {
 			if (text != null) {
-				core_connection.send_insert(view_id, text);
+				core_connection.send_paste(view_id, text);
 			}
 		});
 	}
