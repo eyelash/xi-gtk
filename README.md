@@ -41,6 +41,12 @@ ninja
 ```
 
 Now you can either launch xi-gtk from the build directory with `./xi-gtk` or install it with `sudo ninja install`.
+If you want to use a debug build of `xi-core`, you should set the path explicitly with the `XI_CORE` environment variable:
+
+```sh
+XI_CORE=xi-editor/rust/target/release/xi-core ./xi-gtk/build/xi-gtk
+```
+
 
 ## Shortcuts
 
