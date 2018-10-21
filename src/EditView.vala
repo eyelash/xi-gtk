@@ -267,7 +267,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 
 	[Signal(action = true)]
 	public virtual signal void send_edit(string method) {
-		core_connection.send_edit(view_id, method, new Json.Object());
+		core_connection.send_edit(view_id, method);
 	}
 
 	[Signal(action = true)]

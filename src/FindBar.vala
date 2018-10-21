@@ -26,10 +26,13 @@ class FindBar: Gtk.ActionBar {
 		core_connection.send_find(view_id, find_entry.text, case_sensitive.active, regex.active, whole_words.active);
 	}
 	private void find_next() {
-		core_connection.send_find_next(view_id, true, false, null);
+		core_connection.send_find_next(view_id, true, false, "set");
 	}
 	private void find_previous() {
-		core_connection.send_find_previous(view_id, true, false, null);
+		core_connection.send_find_previous(view_id, true, false, "set");
+	}
+	private void find_all() {
+		core_connection.send_edit(view_id, "find_all");
 	}
 
 	public FindBar(CoreConnection core_connection, string view_id) {
@@ -79,6 +82,10 @@ class FindBar: Gtk.ActionBar {
 		find_box.pack_start(find_prev_button, true, true);
 		find_box.pack_start(find_button, true, true);
 		grid.attach(find_box, 1, 0);
+
+		var find_all_button = new Gtk.Button.with_label("Find All");
+		find_all_button.clicked.connect(find_all);
+		grid.attach(find_all_button, 2, 0);
 
 		var close_button = new Gtk.Button.from_icon_name("window-close-symbolic", Gtk.IconSize.BUTTON);
 		close_button.relief = Gtk.ReliefStyle.NONE;

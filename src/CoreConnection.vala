@@ -186,14 +186,14 @@ class CoreConnection {
 		params.set_boolean_member("whole_words", whole_words);
 		send_edit(view_id, "find", params);
 	}
-	public void send_find_next(string view_id, bool wrap_around, bool allow_same, string? modify_selection) {
+	public void send_find_next(string view_id, bool wrap_around, bool allow_same, string modify_selection) {
 		var params = new Json.Object();
 		params.set_boolean_member("wrap_around", wrap_around);
 		params.set_boolean_member("allow_same", allow_same);
 		params.set_string_member("modify_selection", modify_selection);
 		send_edit(view_id, "find_next", params);
 	}
-	public void send_find_previous(string view_id, bool wrap_around, bool allow_same, string? modify_selection) {
+	public void send_find_previous(string view_id, bool wrap_around, bool allow_same, string modify_selection) {
 		var params = new Json.Object();
 		params.set_boolean_member("wrap_around", wrap_around);
 		params.set_boolean_member("allow_same", allow_same);
