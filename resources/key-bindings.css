@@ -32,14 +32,15 @@
 	bind "Delete"    { "send-edit"("delete_forward") };
 	bind "Escape"    { "send-edit"("cancel_operation") };
 
-	bind "<Primary>A" { "send-edit"("select_all") };
-	bind "<Primary>T" { "send-edit"("transpose") };
-	bind "<Primary>Z" { "send-edit"("undo") };
-	bind "<Primary>Y" { "send-edit"("redo") };
-	bind "<Primary>C" { "copy"() };
-	bind "<Primary>X" { "cut"() };
-	bind "<Primary>V" { "paste"() };
-	bind "<Primary>D" { "add-next-to-selection"() };
+	bind "<Primary>A"        { "send-edit"("select_all") };
+	bind "<Primary>T"        { "send-edit"("transpose") };
+	bind "<Primary>Z"        { "send-edit"("undo") };
+	bind "<Primary>Y"        { "send-edit"("redo") };
+	bind "<Primary>C"        { "copy"() };
+	bind "<Primary>X"        { "cut"() };
+	bind "<Primary>V"        { "paste"() };
+	bind "<Primary>D"        { "add-next-to-selection"() };
+	bind "<Primary><Shift>D" { "send-edit"("duplicate_line") };
 }
 
 xi-editview {
