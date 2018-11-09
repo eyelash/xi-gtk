@@ -68,6 +68,7 @@ Shortcut                                         | Command
 - [x] undo / redo
 - [x] copy / paste
 - [ ] line numbers
-- [ ] find / replace
+- [x] find / replace
+- [ ] command palette
 - [ ] i18n
 - [ ] preferences (font family, font size, etc.)

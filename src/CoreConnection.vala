@@ -200,6 +200,11 @@ class CoreConnection {
 		params.set_string_member("modify_selection", modify_selection);
 		send_edit(view_id, "find_previous", params);
 	}
+	public void send_replace(string view_id, string chars) {
+		var params = new Json.Object();
+		params.set_string_member("chars", chars);
+		send_edit(view_id, "replace", params);
+	}
 	public void send_highlight_find(string view_id, bool visible) {
 		var params = new Json.Object();
 		params.set_boolean_member("visible", visible);

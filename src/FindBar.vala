@@ -21,6 +21,7 @@ class FindBar: Gtk.ActionBar {
 	private Gtk.ToggleButton case_sensitive;
 	private Gtk.ToggleButton regex;
 	private Gtk.ToggleButton whole_words;
+	private Gtk.Entry replace_entry;
 
 	private void find() {
 		core_connection.send_find(view_id, find_entry.text, case_sensitive.active, regex.active, whole_words.active);
@@ -33,6 +34,15 @@ class FindBar: Gtk.ActionBar {
 	}
 	private void find_all() {
 		core_connection.send_edit(view_id, "find_all");
+	}
+	private void replace() {
+		core_connection.send_replace(view_id, replace_entry.text);
+	}
+	private void replace_next() {
+		core_connection.send_edit(view_id, "replace_next");
+	}
+	private void replace_all() {
+		core_connection.send_edit(view_id, "replace_all");
 	}
 
 	public FindBar(CoreConnection core_connection, string view_id) {
@@ -69,18 +79,18 @@ class FindBar: Gtk.ActionBar {
 		entry_box.hexpand = true;
 		grid.attach(entry_box, 0, 0);
 
-		var find_button = new Gtk.Button.from_icon_name("go-down-symbolic", Gtk.IconSize.BUTTON);
-		find_button.tooltip_text = "Find Next";
-		find_button.clicked.connect(find_next);
-
 		var find_prev_button = new Gtk.Button.from_icon_name("go-up-symbolic", Gtk.IconSize.BUTTON);
 		find_prev_button.tooltip_text = "Find Previous";
 		find_prev_button.clicked.connect(find_previous);
 
+		var find_next_button = new Gtk.Button.from_icon_name("go-down-symbolic", Gtk.IconSize.BUTTON);
+		find_next_button.tooltip_text = "Find Next";
+		find_next_button.clicked.connect(find_next);
+
 		var find_box = new Gtk.Box(Gtk.Orientation.HORIZONTAL, 0);
 		find_box.get_style_context().add_class(Gtk.STYLE_CLASS_LINKED);
 		find_box.pack_start(find_prev_button, true, true);
-		find_box.pack_start(find_button, true, true);
+		find_box.pack_start(find_next_button, true, true);
 		grid.attach(find_box, 1, 0);
 
 		var find_all_button = new Gtk.Button.with_label("Find All");
@@ -91,6 +101,20 @@ class FindBar: Gtk.ActionBar {
 		close_button.relief = Gtk.ReliefStyle.NONE;
 		close_button.clicked.connect(() => hide());
 		grid.attach(close_button, 3, 0);
+
+		replace_entry = new Gtk.Entry();
+		replace_entry.changed.connect(replace);
+		replace_entry.activate.connect(replace_next);
+		replace_entry.hexpand = true;
+		grid.attach(replace_entry, 0, 1);
+
+		var replace_button = new Gtk.Button.with_label("Replace");
+		replace_button.clicked.connect(replace_next);
+		grid.attach(replace_button, 1, 1);
+
+		var replace_all_button = new Gtk.Button.with_label("Replace All");
+		replace_all_button.clicked.connect(replace_all);
+		grid.attach(replace_all_button, 2, 1);
 	}
 
 	public override bool key_press_event(Gdk.EventKey event) {
