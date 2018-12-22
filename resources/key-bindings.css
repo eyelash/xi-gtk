@@ -26,11 +26,12 @@
 	bind "<Alt><Shift>Up"        { "send-edit"("add_selection_above") };
 	bind "<Alt><Shift>Down"      { "send-edit"("add_selection_below") };
 
-	bind "Return"    { "send-edit"("insert_newline") };
-	bind "Tab"       { "send-edit"("insert_tab") };
-	bind "BackSpace" { "send-edit"("delete_backward") };
-	bind "Delete"    { "send-edit"("delete_forward") };
-	bind "Escape"    { "send-edit"("cancel_operation") };
+	bind "Return"     { "send-edit"("insert_newline") };
+	bind "Tab"        { "send-edit"("insert_tab") };
+	bind "<Shift>Tab" { "send-edit"("outdent") };
+	bind "BackSpace"  { "send-edit"("delete_backward") };
+	bind "Delete"     { "send-edit"("delete_forward") };
+	bind "Escape"     { "send-edit"("cancel_operation") };
 
 	bind "<Primary>A"        { "send-edit"("select_all") };
 	bind "<Primary>T"        { "send-edit"("transpose") };
