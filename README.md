@@ -1,64 +1,30 @@
 # xi-gtk
 
-[![Join the chat at https://gitter.im/eyelash/xi-gtk](https://badges.gitter.im/eyelash/xi-gtk.svg)](https://gitter.im/eyelash/xi-gtk)
+a GTK+ front-end for the [Xi editor](https://github.com/xi-editor/xi-editor)
 
 ![screenshot](https://raw.githubusercontent.com/eyelash/xi-gtk/master/screenshot.png)
 
 ## Instructions
 
-### Build and Install xi-core
-
-Make sure you have a recent version of [Rust](https://www.rust-lang.org) and Cargo installed (either from your distribution's repositories or with [rustup](https://rustup.rs)) and that `~/.cargo/bin` is in your `PATH` environment variable.
-
-```sh
-git clone https://github.com/google/xi-editor.git
-cd xi-editor/rust
-cargo install
-```
-
-### Build and Install xi-gtk
-
-First you need to install the dependencies.
+We recommend to use flatpak-builder for building xi-gtk.
+To get started, make sure you have flatpak-builder installed and the flathub repo configured correctly.
 
 ```sh
-# Debian/Ubuntu:
-sudo apt install build-essential valac meson libgtk-3-dev libjson-glib-dev
-# Arch:
-sudo pacman -S vala meson
-# Fedora:
-sudo dnf install meson vala gtk3-devel json-glib-devel
+# add the flathub repo
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 ```
 
-Once you have the dependencies installed you can build xi-gtk.
+Once you are ready, you can build and install xi-gtk with a single command.
 
 ```sh
-git clone https://github.com/eyelash/xi-gtk.git
-cd xi-gtk
-mkdir build
-cd build
-meson ..
-ninja
+flatpak-builder --from-git=https://github.com/eyelash/xi-gtk.git --install-deps-from=flathub --install ~/.xi-gtk-build flatpak.json
 ```
 
-Now you can either launch xi-gtk from the build directory with `./xi-gtk` or install it with `sudo ninja install`.
-If you want to use a debug build of `xi-core`, you should set the path explicitly with the `XI_CORE` environment variable:
+Finally, you can run xi-gtk.
 
 ```sh
-XI_CORE=xi-editor/rust/target/release/xi-core ./xi-gtk/build/xi-gtk
+flatpak run com.github.eyelash.xi-gtk
 ```
-
-
-## Shortcuts
-
-Shortcut                                         | Command
--------------------------------------------------|---------
-<kbd>Control</kbd>+<kbd>N</kbd>                  | New File
-<kbd>Control</kbd>+<kbd>O</kbd>                  | Open File
-<kbd>Control</kbd>+<kbd>S</kbd>                  | Save
-<kbd>Control</kbd>+<kbd>Shift</kbd>+<kbd>S</kbd> | Save As
-<kbd>Control</kbd>+<kbd>Z</kbd>                  | Undo
-<kbd>Control</kbd>+<kbd>Y</kbd>                  | Redo
-<kbd>Control</kbd>+<kbd>Q</kbd>                  | Quit
 
 ## Roadmap
 
