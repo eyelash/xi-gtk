@@ -64,8 +64,20 @@ class LineCache {
 						n -= invalid;
 						index += invalid;
 					}
+					int64 number = op.get_int_member("ln");
+					// increment the number if the first line is wrapped
+					if (n > 0 && index < invalid_before + lines.length) {
+						var line = lines[(uint)(index - invalid_before)];
+						if (line == null || line.is_wrapped()) {
+							number++;
+						}
+					}
 					while (n > 0 && index < invalid_before + lines.length) {
 						var line = lines[(uint)(index - invalid_before)];
+						if (line != null && !line.is_wrapped()) {
+							line.set_number(number);
+							number++;
+						}
 						add_line(new_lines, ref new_invalid_before, ref new_invalid_after, line);
 						n--;
 						index++;
@@ -86,7 +98,12 @@ class LineCache {
 					for (int j = 0; j < json_lines.get_length(); j++) {
 						var json_line = json_lines.get_object_element(j);
 						var text = json_line.get_string_member("text");
-						var line = new Line(context, font_description, text, new_invalid_before + new_lines.length + new_invalid_after + 1);
+						var line = new Line(context, font_description, text);
+						if (json_line.has_member("ln")) {
+							line.set_number(json_line.get_int_member("ln"));
+						} else {
+							line.set_number(0);
+						}
 						if (json_line.has_member("cursor")) {
 							line.set_cursors(json_line.get_array_member("cursor"));
 						}

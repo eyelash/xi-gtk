@@ -60,14 +60,14 @@ Shortcut                                         | Command
 <kbd>Control</kbd>+<kbd>Y</kbd>                  | Redo
 <kbd>Control</kbd>+<kbd>Q</kbd>                  | Quit
 
-## To Do
+## Roadmap
 
 - [x] mouse input and selections
 - [x] saving
 - [x] follow the cursor (respect the `scrollto` parameter)
 - [x] undo / redo
 - [x] copy / paste
-- [ ] line numbers
+- [x] line numbers
 - [x] find / replace
 - [ ] command palette
 - [ ] i18n

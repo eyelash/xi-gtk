@@ -25,13 +25,20 @@ class Line {
 	private double[] cursors;
 	private GenericArray<Background?> backgrounds;
 
-	public Line(Pango.Context context, Pango.FontDescription font_description, string text, int64 number) {
+	public Line(Pango.Context context, Pango.FontDescription font_description, string text) {
 		layout = new Pango.Layout(context);
 		layout.set_text(text, -1);
 		layout.set_font_description(font_description);
 		this.number = new Pango.Layout(context);
-		this.number.set_text(number.to_string(), -1);
 		this.number.set_font_description(font_description);
+	}
+
+	public void set_number(int64 number) {
+		this.number.set_text(number == 0 ? "•" : number.to_string(), -1);
+	}
+
+	public bool is_wrapped() {
+		return number.get_text() == "•";
 	}
 
 	public void set_cursors(Json.Array json_cursors) {
