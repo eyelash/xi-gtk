@@ -311,22 +311,17 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		core_connection.send_find_next(view_id, true, true, "add");
 	}
 
-	public void save() {
+	public bool save() {
 		if (file == null) {
-			save_as();
-			return;
+			return false;
 		}
 		core_connection.send_save(view_id, file.get_path());
+		return true;
 	}
-	public void save_as() {
-		var dialog = new Gtk.FileChooserDialog(null, get_toplevel() as Gtk.Window, Gtk.FileChooserAction.SAVE, "Cancel", Gtk.ResponseType.CANCEL, "Save", Gtk.ResponseType.ACCEPT);
-		dialog.do_overwrite_confirmation = true;
-		if (dialog.run() == Gtk.ResponseType.ACCEPT) {
-			file = dialog.get_file();
-			label = file.get_basename();
-			core_connection.send_save(view_id, file.get_path());
-		}
-		dialog.destroy();
+	public void save_as(File file) {
+		this.file = file;
+		label = file.get_basename();
+		core_connection.send_save(view_id, file.get_path());
 	}
 }
 

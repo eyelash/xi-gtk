@@ -17,6 +17,7 @@ namespace Xi {
 class Window: Gtk.ApplicationWindow {
 	private CoreConnection core_connection;
 	private Xi.Notebook notebook;
+	private Gtk.FileChooserNative dialog;
 
 	public Window(Gtk.Application application, CoreConnection core_connection) {
 		Object(application: application);
@@ -31,26 +32,13 @@ class Window: Gtk.ApplicationWindow {
 		});
 		add_action(new_tab_action);
 		var open_action = new SimpleAction("open", null);
-		open_action.activate.connect(() => {
-			var dialog = new Gtk.FileChooserDialog(null, this, Gtk.FileChooserAction.OPEN, "Cancel", Gtk.ResponseType.CANCEL, "Open", Gtk.ResponseType.ACCEPT);
-			dialog.select_multiple = true;
-			if (dialog.run() == Gtk.ResponseType.ACCEPT) {
-				foreach (var file in dialog.get_files()) {
-					add_new_tab(file);
-				}
-			}
-			dialog.destroy();
-		});
+		open_action.activate.connect(open);
 		add_action(open_action);
 		var save_action = new SimpleAction("save", null);
-		save_action.activate.connect(() => {
-			notebook.get_current_edit_view().get_edit_view().save();
-		});
+		save_action.activate.connect(save);
 		add_action(save_action);
 		var save_as_action = new SimpleAction("save-as", null);
-		save_as_action.activate.connect(() => {
-			notebook.get_current_edit_view().get_edit_view().save_as();
-		});
+		save_as_action.activate.connect(save_as);
 		add_action(save_as_action);
 		var find_action = new SimpleAction("find", null);
 		find_action.activate.connect(() => {
@@ -84,6 +72,40 @@ class Window: Gtk.ApplicationWindow {
 			string view_id = core_connection.send_new_view.end(res);
 			this.notebook.add_edit_view(core_connection, view_id, file);
 		});
+	}
+
+	private void open() {
+		dialog = new Gtk.FileChooserNative(null, this, Gtk.FileChooserAction.OPEN, null, null);
+		dialog.select_multiple = true;
+		dialog.response.connect((response) => {
+			if (response == Gtk.ResponseType.ACCEPT) {
+				foreach (var file in dialog.get_files()) {
+					add_new_tab(file);
+				}
+			}
+			dialog.destroy();
+		});
+		dialog.show();
+	}
+
+	private void save() {
+		unowned EditView edit_view = notebook.get_current_edit_view().get_edit_view();
+		if (!edit_view.save()) {
+			save_as();
+		}
+	}
+
+	private void save_as() {
+		EditView edit_view = notebook.get_current_edit_view().get_edit_view();
+		dialog = new Gtk.FileChooserNative(null, this, Gtk.FileChooserAction.SAVE, null, null);
+		dialog.do_overwrite_confirmation = true;
+		dialog.response.connect((response) => {
+			if (response == Gtk.ResponseType.ACCEPT) {
+				edit_view.save_as(dialog.get_file());
+			}
+			dialog.destroy();
+		});
+		dialog.show();
 	}
 }
 
