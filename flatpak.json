@@ -1,7 +1,7 @@
 {
 	"app-id": "com.github.eyelash.xi-gtk",
 	"runtime": "org.gnome.Platform",
-	"runtime-version": "3.26",
+	"runtime-version": "3.32",
 	"sdk": "org.gnome.Sdk",
 	"sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
 	"command": "xi-gtk",
@@ -22,12 +22,13 @@
 			"subdir": "rust",
 			"buildsystem": "simple",
 			"build-commands": [
-				"source /usr/lib/sdk/rust-stable/enable.sh && cargo build --all --release",
+				"cargo build --all --release",
 				"install -D target/release/xi-core /app/bin/xi-core",
 				"install -D target/release/xi-syntect-plugin /app/share/xi-gtk/plugins/syntect/bin/xi-syntect-plugin",
 				"install -D syntect-plugin/manifest.toml /app/share/xi-gtk/plugins/syntect/manifest.toml"
 			],
 			"build-options": {
+				"append-path": "/usr/lib/sdk/rust-stable/bin",
 				"build-args": ["--share=network"]
 			}
 		},
