@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Elias Aebi
+// Copyright 2016-2019 Elias Aebi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -194,7 +194,6 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		}
 		int64 line = get_line(y);
 		int64 column = get_index(x, line);
-		uint button = multipress_gesture.get_current_button();
 		var event = multipress_gesture.get_last_event(multipress_gesture.get_current_sequence());
 		Gdk.ModifierType state;
 		event.get_state(out state);
@@ -202,29 +201,24 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		bool extend_selection = (state & get_modifier_mask(Gdk.ModifierIntent.EXTEND_SELECTION)) != 0;
 		switch (n_press) {
 			case 1:
-				if (modify_selection) {
-					core_connection.send_gesture(view_id, line, column, "toggle_sel");
-				} else if (extend_selection) {
-					core_connection.send_gesture(view_id, line, column, "range_select");
+				if (extend_selection) {
+					core_connection.send_gesture_select_extend(view_id, line, column, "point");
 				} else {
-					core_connection.send_gesture(view_id, line, column, "point_select");
-					if (button == Gdk.BUTTON_MIDDLE) {
-						paste_primary();
-					}
+					core_connection.send_gesture_select(view_id, line, column, "point", modify_selection);
 				}
 				break;
 			case 2:
-				if (modify_selection) {
-					core_connection.send_gesture(view_id, line, column, "multi_word_select");
+				if (extend_selection) {
+					core_connection.send_gesture_select_extend(view_id, line, column, "word");
 				} else {
-					core_connection.send_gesture(view_id, line, column, "word_select");
+					core_connection.send_gesture_select(view_id, line, column, "word", modify_selection);
 				}
 				break;
 			case 3:
-				if (modify_selection) {
-					core_connection.send_gesture(view_id, line, column, "multi_line_select");
+				if (extend_selection) {
+					core_connection.send_gesture_select_extend(view_id, line, column, "line");
 				} else {
-					core_connection.send_gesture(view_id, line, column, "line_select");
+					core_connection.send_gesture_select(view_id, line, column, "line", modify_selection);
 				}
 				break;
 		}
@@ -235,7 +229,7 @@ class EditView: Gtk.DrawingArea, Gtk.Scrollable {
 		drag_gesture.get_start_point(out start_x, out start_y);
 		int64 line = get_line(start_y + offset_y);
 		int64 column = get_index(start_x + offset_x, line);
-		core_connection.send_drag(view_id, line, column, 0);
+		core_connection.send_gesture_drag(view_id, line, column);
 	}
 
 	private void handle_scroll() {

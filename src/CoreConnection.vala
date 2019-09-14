@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Elias Aebi
+// Copyright 2016-2019 Elias Aebi
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -155,14 +155,6 @@ class CoreConnection {
 		send_edit_array(view_id, "scroll", params);
 	}
 
-	public void send_drag(string view_id, int64 line, int64 column, int64 modifiers) {
-		var params = new Json.Array();
-		params.add_int_element(line);
-		params.add_int_element(column);
-		params.add_int_element(modifiers);
-		send_edit_array(view_id, "drag", params);
-	}
-
 	/*public void send_request_lines(string tab, int64 first_line, int64 last_line) {
 		var params = new Json.Array();
 		params.add_int_element(first_line);
@@ -170,11 +162,36 @@ class CoreConnection {
 		send_edit_array(tab, "request_lines", params);
 	}*/
 
-	public void send_gesture(string view_id, int64 line, int64 col, string ty) {
+	public void send_gesture(string view_id, int64 line, int64 col, Json.Object ty) {
 		var params = new Json.Object();
 		params.set_int_member("line", line);
 		params.set_int_member("col", col);
-		params.set_string_member("ty", ty);
+		params.set_object_member("ty", ty);
+		send_edit(view_id, "gesture", params);
+	}
+
+	public void send_gesture_select(string view_id, int64 line, int64 col, string granularity, bool multi) {
+		var select = new Json.Object();
+		select.set_string_member("granularity", granularity);
+		select.set_boolean_member("multi", multi);
+		var ty = new Json.Object();
+		ty.set_object_member("select", select);
+		send_gesture(view_id, line, col, ty);
+	}
+
+	public void send_gesture_select_extend(string view_id, int64 line, int64 col, string granularity) {
+		var select = new Json.Object();
+		select.set_string_member("granularity", granularity);
+		var ty = new Json.Object();
+		ty.set_object_member("select_extend", select);
+		send_gesture(view_id, line, col, ty);
+	}
+
+	public void send_gesture_drag(string view_id, int64 line, int64 col) {
+		var params = new Json.Object();
+		params.set_int_member("line", line);
+		params.set_int_member("col", col);
+		params.set_string_member("ty", "drag");
 		send_edit(view_id, "gesture", params);
 	}
 
