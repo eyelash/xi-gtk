@@ -1,7 +1,7 @@
 {
 	"app-id": "com.github.eyelash.xi-gtk",
 	"runtime": "org.gnome.Platform",
-	"runtime-version": "3.32",
+	"runtime-version": "3.36",
 	"sdk": "org.gnome.Sdk",
 	"sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
 	"command": "xi-gtk",
