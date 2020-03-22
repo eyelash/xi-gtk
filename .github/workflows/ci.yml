@@ -1,0 +1,10 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: sudo apt-get install valac meson libgtk-3-dev libjson-glib-dev
+    - run: meson build
+    - run: ninja -C build
